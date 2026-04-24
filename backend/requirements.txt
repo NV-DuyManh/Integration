@@ -1,0 +1,21 @@
+# ─── Core ────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+
+# ─── Database Drivers ────────────────────────────────────────────
+# SQL Server (HUMAN_2025)
+pyodbc==5.2.0
+
+# MySQL (PAYROLL_2026)
+pymysql==1.1.1
+cryptography==44.0.0
+
+# ─── Async DB (optional upgrade path) ────────────────────────────
+aioodbc==0.5.0
+aiomysql==0.2.0
+
+# ─── Utilities ───────────────────────────────────────────────────
+httpx==0.28.1
