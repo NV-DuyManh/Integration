@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────
 import './style.css';
 import { api } from './api.ts';
-import type { SystemStatus, SchemaResponse } from './api.ts';
+import type { SystemStatus, SchemaResponse, LoginResponse } from './api.ts';
 
 // ── State ───────────────────────────────────────────────────────
 let currentView = 'dashboard';
@@ -12,9 +12,42 @@ let dbStatus: SystemStatus | null = null;
 let hrSchema: SchemaResponse | null = null;
 let payrollSchema: SchemaResponse | null = null;
 
+// ── Auth State ──────────────────────────────────────────────────
+let authToken: string | null = localStorage.getItem('auth_token');
+let authUser: { username: string; role: string } | null = null;
+let loginError: string | null = null;
+let loginLoading = false;
+
+function saveAuth(data: LoginResponse): void {
+  authToken = data.token;
+  authUser = { username: data.username, role: data.role };
+  localStorage.setItem('auth_token', data.token);
+  localStorage.setItem('auth_user', JSON.stringify(authUser));
+}
+
+function clearAuth(): void {
+  authToken = null;
+  authUser = null;
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_user');
+}
+
+// Restore user from localStorage
+const storedUser = localStorage.getItem('auth_user');
+if (storedUser) {
+  try { authUser = JSON.parse(storedUser); } catch { clearAuth(); }
+}
+
 // ── Render ──────────────────────────────────────────────────────
 function render(): void {
   const app = document.querySelector<HTMLDivElement>('#app')!;
+
+  if (!authToken || !authUser) {
+    app.innerHTML = renderLoginPage();
+    attachLoginListeners();
+    return;
+  }
+
   app.innerHTML = `
     ${renderSidebar()}
     <div class="main-content">
@@ -25,6 +58,105 @@ function render(): void {
     </div>
   `;
   attachEventListeners();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  LOGIN PAGE
+// ══════════════════════════════════════════════════════════════════
+function renderLoginPage(): string {
+  return `
+    <div class="login-wrapper">
+      <div class="login-bg-orb login-bg-orb-1"></div>
+      <div class="login-bg-orb login-bg-orb-2"></div>
+      <div class="login-bg-orb login-bg-orb-3"></div>
+
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-brand-icon">⚡</div>
+          <h1 class="login-title">Integration</h1>
+          <p class="login-subtitle">HR & Payroll Middleware Dashboard</p>
+        </div>
+
+        <form id="login-form" class="login-form" autocomplete="off">
+          ${loginError ? `<div class="login-error" id="login-error"><span>⚠</span> ${loginError}</div>` : ''}
+
+          <div class="form-group">
+            <label class="form-label" for="login-username">Username</label>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <input type="text" id="login-username" class="form-input" placeholder="Enter username" autocomplete="username" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="login-password" class="form-input" placeholder="Enter password" autocomplete="current-password" required />
+            </div>
+          </div>
+
+          <button type="submit" class="login-btn" id="login-submit" ${loginLoading ? 'disabled' : ''}>
+            ${loginLoading ? '<span class="login-spinner"></span> Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        <div class="login-actions">
+          <a href="#" class="login-action-link" id="link-create-account">
+            <span class="login-action-icon">✨</span>
+            Create account
+          </a>
+          <span class="login-action-divider">·</span>
+          <a href="#" class="login-action-link" id="link-forgot-password">
+            <span class="login-action-icon">🔑</span>
+            Forgot password?
+          </a>
+        </div>
+
+        <div class="login-trust-note">
+          <span class="trust-icon">🔒</span>
+          <span>Secured with encrypted authentication. Your credentials are never stored in plain text.</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachLoginListeners(): void {
+  const form = document.getElementById('login-form');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const usernameEl = document.getElementById('login-username') as HTMLInputElement;
+    const passwordEl = document.getElementById('login-password') as HTMLInputElement;
+    const username = usernameEl?.value.trim();
+    const password = passwordEl?.value;
+
+    if (!username || !password) {
+      loginError = 'Please enter both username and password';
+      render();
+      return;
+    }
+
+    loginLoading = true;
+    loginError = null;
+    render();
+
+    const result = await api.login({ username, password });
+    loginLoading = false;
+
+    if (result.error) {
+      loginError = result.error.includes('401') ? 'Invalid username or password' : 'Connection failed. Is the backend running?';
+      render();
+      return;
+    }
+
+    if (result.data) {
+      saveAuth(result.data);
+      loginError = null;
+      render();
+      loadAllData();
+    }
+  });
 }
 
 function renderSidebar(): string {
@@ -81,6 +213,15 @@ function renderSidebar(): string {
           <span class="db-name">PAYROLL_2026</span>
           <span class="db-engine">MySQL</span>
         </div>
+        ${authUser ? `
+        <div class="sidebar-user">
+          <div class="user-avatar">${authUser.username.charAt(0).toUpperCase()}</div>
+          <div class="user-info">
+            <span class="user-name">${authUser.username}</span>
+            <span class="user-role">${authUser.role}</span>
+          </div>
+        </div>
+        ` : ''}
       </div>
     </aside>
   `;
@@ -94,17 +235,26 @@ function renderHeader(): string {
     sync: 'Sync Status',
     activity: 'Activity Log',
   };
+  const subtitles: Record<string, string> = {
+    dashboard: 'System health & database metrics',
+    hr: 'Schema explorer for HR database',
+    payroll: 'Schema explorer for Payroll database',
+    sync: 'Cross-database comparison',
+    activity: 'Recent middleware operations',
+  };
 
   return `
     <header class="header">
       <div class="header-left">
-        <h2>${titles[currentView] || 'Dashboard'}</h2>
+        <div>
+          <h2>${titles[currentView] || 'Dashboard'}</h2>
+          <span class="breadcrumb">${subtitles[currentView] || ''}</span>
+        </div>
       </div>
       <div class="header-right">
         <button class="header-btn" id="btn-refresh">🔄 Refresh</button>
-        <button class="header-btn" id="btn-api-docs">
-          📖 API Docs
-        </button>
+        <button class="header-btn" id="btn-api-docs">📖 API Docs</button>
+        <button class="header-btn header-btn-logout" id="btn-logout">🚪 Logout</button>
       </div>
     </header>
   `;
@@ -141,11 +291,13 @@ function renderDashboard(): string {
     }
   }
 
+  const totalTables = (hrSchema?.table_count ?? 0) + (payrollSchema?.table_count ?? 0);
+
   return `
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">SQL Server Status</span>
+          <span class="stat-label">SQL Server</span>
           <span class="stat-icon">🗄️</span>
         </div>
         <div class="stat-value">
@@ -158,7 +310,7 @@ function renderDashboard(): string {
 
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">MySQL Status</span>
+          <span class="stat-label">MySQL</span>
           <span class="stat-icon">🐬</span>
         </div>
         <div class="stat-value">
@@ -171,20 +323,20 @@ function renderDashboard(): string {
 
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">HR Tables</span>
+          <span class="stat-label">Total Tables</span>
           <span class="stat-icon">📋</span>
         </div>
-        <div class="stat-value">${hrTableCount}</div>
-        <div class="stat-change positive">${hrTotalRows.toLocaleString()} total rows</div>
+        <div class="stat-value">${totalTables || '—'}</div>
+        <div class="stat-change positive">${hrTableCount} HR · ${payrollTableCount} Payroll</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">Payroll Tables</span>
-          <span class="stat-icon">💳</span>
+          <span class="stat-label">Total Records</span>
+          <span class="stat-icon">💎</span>
         </div>
-        <div class="stat-value">${payrollTableCount}</div>
-        <div class="stat-change positive">${payrollTotalRows.toLocaleString()} total rows</div>
+        <div class="stat-value">${(hrTotalRows + payrollTotalRows).toLocaleString()}</div>
+        <div class="stat-change positive">${hrTotalRows.toLocaleString()} HR · ${payrollTotalRows.toLocaleString()} Payroll</div>
       </div>
     </div>
 
@@ -297,6 +449,10 @@ function renderSchemaView(db: 'hr' | 'payroll'): string {
 }
 
 function renderSyncView(): string {
+  const bothConnected = dbStatus?.sqlserver.connected && dbStatus?.mysql.connected;
+  const syncLabel = bothConnected ? 'Both Online' : 'Degraded';
+  const syncBadgeClass = bothConnected ? 'online' : 'offline';
+
   return `
     <div class="card">
       <div class="card-header">
@@ -304,18 +460,29 @@ function renderSyncView(): string {
         <span class="card-badge sql-server">Read-Only</span>
       </div>
       <div class="card-body">
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">
           The sync checker compares schemas between HUMAN_2025 and PAYROLL_2026 to detect discrepancies.
           No data is modified — this is a read-only diagnostic tool.
         </p>
-        <div class="stats-grid" style="margin-bottom: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+          <span class="status-badge ${syncBadgeClass}">● ${syncLabel}</span>
+        </div>
+        <div class="stats-grid" style="margin-bottom: 0; grid-template-columns: repeat(2, 1fr);">
           <div class="stat-card">
-            <div class="stat-label">HR Tables</div>
+            <div class="stat-header">
+              <span class="stat-label">HR Tables</span>
+              <span class="stat-icon">🗄️</span>
+            </div>
             <div class="stat-value">${hrSchema?.table_count ?? '—'}</div>
+            <div class="stat-change positive">HUMAN_2025</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Payroll Tables</div>
+            <div class="stat-header">
+              <span class="stat-label">Payroll Tables</span>
+              <span class="stat-icon">🐬</span>
+            </div>
             <div class="stat-value">${payrollSchema?.table_count ?? '—'}</div>
+            <div class="stat-change positive">PAYROLL_2026</div>
           </div>
         </div>
       </div>
@@ -348,7 +515,7 @@ function renderActivityView(): string {
         <div class="activity-item">
           <div class="activity-icon auth">🔑</div>
           <div class="activity-text">
-            <div class="action">Auth module initialized (demo mode)</div>
+            <div class="action">Auth module initialized</div>
             <div class="time">Startup</div>
           </div>
         </div>
@@ -379,6 +546,19 @@ function attachEventListeners(): void {
   document.getElementById('btn-api-docs')?.addEventListener('click', () => {
     window.open('http://localhost:8000/docs', '_blank');
   });
+
+  // Logout button
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    if (authToken) {
+      await api.logout(authToken);
+    }
+    clearAuth();
+    dbStatus = null;
+    hrSchema = null;
+    payrollSchema = null;
+    currentView = 'dashboard';
+    render();
+  });
 }
 
 // ── Data Loading ────────────────────────────────────────────────
@@ -398,5 +578,23 @@ async function loadAllData(): Promise<void> {
 }
 
 // ── Initialize ──────────────────────────────────────────────────
-render();
-loadAllData();
+async function initApp(): Promise<void> {
+  // If we have a stored token, validate it
+  if (authToken) {
+    const result = await api.me(authToken);
+    if (result.error) {
+      clearAuth();
+      render();
+      return;
+    }
+    if (result.data) {
+      authUser = { username: result.data.username, role: result.data.role };
+    }
+    render();
+    loadAllData();
+  } else {
+    render();
+  }
+}
+
+initApp();
