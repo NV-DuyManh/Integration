@@ -17,13 +17,11 @@ class Settings(BaseSettings):
     PORT: int = 8000
     DEBUG: bool = True
 
-    # ── SQL Server — HUMAN_2025 ───────────────────────────────────
-    SQLSERVER_HOST: str = "localhost"
-    SQLSERVER_PORT: int = 1433
+    # ── SQL Server — HUMAN_2025 (Windows Authentication) ────────────
+    SQLSERVER_HOST: str = r"DUY-MANH\SQLEXPRESS"
     SQLSERVER_DATABASE: str = "HUMAN_2025"
-    SQLSERVER_USER: str = "sa"
-    SQLSERVER_PASSWORD: str = ""
     SQLSERVER_DRIVER: str = "{ODBC Driver 17 for SQL Server}"
+    SQLSERVER_TRUSTED_CONNECTION: str = "yes"
 
     # ── MySQL — PAYROLL_2026 ──────────────────────────────────────
     MYSQL_HOST: str = "127.0.0.1"
@@ -36,10 +34,9 @@ class Settings(BaseSettings):
     def sqlserver_connection_string(self) -> str:
         return (
             f"DRIVER={self.SQLSERVER_DRIVER};"
-            f"SERVER={self.SQLSERVER_HOST},{self.SQLSERVER_PORT};"
+            f"SERVER={self.SQLSERVER_HOST};"
             f"DATABASE={self.SQLSERVER_DATABASE};"
-            f"UID={self.SQLSERVER_USER};"
-            f"PWD={self.SQLSERVER_PASSWORD};"
+            f"Trusted_Connection={self.SQLSERVER_TRUSTED_CONNECTION};"
             f"TrustServerCertificate=yes;"
         )
 
