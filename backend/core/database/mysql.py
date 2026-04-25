@@ -1,11 +1,11 @@
-# backend/app/database/mysql.py
+# backend/core/database/mysql.py
 # ─────────────────────────────────────────────────────────────────
 #  MySQL connection pool — PAYROLL_2026
 # ─────────────────────────────────────────────────────────────────
 import pymysql
 import logging
 from contextlib import contextmanager
-from app.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

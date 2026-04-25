@@ -1,12 +1,18 @@
-# backend/app/config.py
+# backend/core/config.py
 # ─────────────────────────────────────────────────────────────────
 #  Centralized settings from .env
 # ─────────────────────────────────────────────────────────────────
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # Ignore VITE_* and other frontend env vars
+    )
+
     # ── Server ────────────────────────────────────────────────────
     PORT: int = 8000
     DEBUG: bool = True
@@ -47,10 +53,6 @@ class Settings(BaseSettings):
             "password": self.MYSQL_PASSWORD,
             "charset": "utf8mb4",
         }
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 settings = Settings()

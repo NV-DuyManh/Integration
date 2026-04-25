@@ -6,8 +6,8 @@
 import logging
 from services.hr_service import HRService
 from services.payroll_service import PayrollService
-from app.database.sqlserver import test_sqlserver_connection
-from app.database.mysql import test_mysql_connection
+from core.database.sqlserver import test_sqlserver_connection
+from core.database.mysql import test_mysql_connection
 
 logger = logging.getLogger(__name__)
 

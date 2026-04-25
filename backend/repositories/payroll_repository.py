@@ -7,7 +7,7 @@
 #    Phase 2 will populate real queries after schema discovery.
 # ─────────────────────────────────────────────────────────────────
 import logging
-from app.database.mysql import mysql_cursor
+from core.database.mysql import mysql_cursor
 
 logger = logging.getLogger(__name__)
 

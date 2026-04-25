@@ -1,29 +1,41 @@
-# backend/app/database/sqlserver.py
+# backend/core/database/sqlserver.py
 # ─────────────────────────────────────────────────────────────────
 #  SQL Server connection pool — HUMAN_2025
+#
+#  Fix: pyodbc.Connection has no `.closed` attribute.
+#  Use try/except on cursor execution to detect stale connections.
 # ─────────────────────────────────────────────────────────────────
 import pyodbc
 import logging
 from contextlib import contextmanager
-from app.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_pool: pyodbc.Connection | None = None
+_connection: pyodbc.Connection | None = None
+
+
+def _is_connection_alive(conn: pyodbc.Connection) -> bool:
+    """Check if an existing connection is still usable."""
+    try:
+        conn.execute("SELECT 1")
+        return True
+    except Exception:
+        return False
 
 
 def get_sqlserver_connection() -> pyodbc.Connection:
     """Get a connection to HUMAN_2025 (SQL Server)."""
-    global _pool
+    global _connection
     try:
-        if _pool is None or _pool.closed:
-            _pool = pyodbc.connect(
+        if _connection is None or not _is_connection_alive(_connection):
+            _connection = pyodbc.connect(
                 settings.sqlserver_connection_string,
                 autocommit=False,
                 timeout=10,
             )
             logger.info("✅ SQL Server connected: %s", settings.SQLSERVER_DATABASE)
-        return _pool
+        return _connection
     except pyodbc.Error as e:
         logger.error("❌ SQL Server connection failed: %s", e)
         raise

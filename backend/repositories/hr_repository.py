@@ -7,7 +7,7 @@
 #    Phase 2 will populate real queries after schema discovery.
 # ─────────────────────────────────────────────────────────────────
 import logging
-from app.database.sqlserver import sqlserver_cursor
+from core.database.sqlserver import sqlserver_cursor
 
 logger = logging.getLogger(__name__)
 
