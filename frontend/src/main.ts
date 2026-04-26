@@ -12,6 +12,15 @@ let dbStatus: SystemStatus | null = null;
 let hrSchema: SchemaResponse | null = null;
 let payrollSchema: SchemaResponse | null = null;
 
+let dataQuality: any = null;
+let reconciliationData: any = null;
+let reportData: any = null;
+let currentReportType: string = 'compensation';
+let employeeSearchQuery = '';
+let employeeSearchResults: any[] | null = null;
+let selectedEmployee: any = null;
+let isSearching = false;
+
 // ── Auth State ──────────────────────────────────────────────────
 let authToken: string | null = localStorage.getItem('auth_token');
 let authUser: { username: string; role: string; email: string } | null = null;
@@ -75,7 +84,7 @@ function renderAuthPage(): string {
       <div class="login-card">
         <div class="login-header">
           <div class="login-brand-icon">⚡</div>
-          <h1 class="login-title">Integration</h1>
+          <h1 class="login-title">NexusBridge</h1>
           <p class="login-subtitle">HR & Payroll Middleware Dashboard</p>
         </div>
 
@@ -295,7 +304,7 @@ function renderSidebar(): string {
       <div class="sidebar-brand">
         <div class="brand-icon">⚡</div>
         <div>
-          <h1>Integration</h1>
+          <h1>NexusBridge</h1>
           <span class="subtitle">HR & Payroll Middleware</span>
         </div>
       </div>
@@ -327,6 +336,22 @@ function renderSidebar(): string {
             <span class="nav-icon">📋</span> Activity Log
           </div>
         </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Intelligence</div>
+          <div class="nav-item ${currentView === 'employee360' ? 'active' : ''}" data-view="employee360">
+            <span class="nav-icon">🔍</span> Employee 360
+          </div>
+          <div class="nav-item ${currentView === 'reconciliation' ? 'active' : ''}" data-view="reconciliation">
+            <span class="nav-icon">⚖️</span> Reconciliation
+          </div>
+          <div class="nav-item ${currentView === 'quality' ? 'active' : ''}" data-view="quality">
+            <span class="nav-icon">🛡️</span> Data Quality
+          </div>
+          <div class="nav-item ${currentView === 'reports' ? 'active' : ''}" data-view="reports">
+            <span class="nav-icon">📑</span> Reports
+          </div>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -356,18 +381,26 @@ function renderSidebar(): string {
 
 function renderHeader(): string {
   const titles: Record<string, string> = {
-    dashboard: 'Dashboard Overview',
+    dashboard: 'Executive Dashboard',
     hr: 'HUMAN_2025 — SQL Server',
     payroll: 'PAYROLL_2026 — MySQL',
     sync: 'Sync Status',
     activity: 'Activity Log',
+    employee360: 'Unified Employee 360',
+    reconciliation: 'Reconciliation Center',
+    quality: 'Data Quality Monitor',
+    reports: 'Actionable Reports'
   };
   const subtitles: Record<string, string> = {
-    dashboard: 'System health & database metrics',
+    dashboard: 'Intelligent middleware metrics & health',
     hr: 'Schema explorer for HR database',
     payroll: 'Schema explorer for Payroll database',
     sync: 'Cross-database comparison',
     activity: 'Recent middleware operations',
+    employee360: 'Search & view integrated HR/Payroll profiles',
+    reconciliation: 'Detect & resolve cross-database anomalies',
+    quality: 'Platform data integrity & sync score',
+    reports: 'Generate read-only cross-db reports'
   };
 
   return `
@@ -394,71 +427,77 @@ function renderPage(): string {
     case 'payroll': return renderSchemaView('payroll');
     case 'sync': return renderSyncView();
     case 'activity': return renderActivityView();
+    case 'employee360': return renderEmployee360();
+    case 'reconciliation': return renderReconciliation();
+    case 'quality': return renderQuality();
+    case 'reports': return renderReports();
     default: return renderDashboard();
   }
 }
 
 function renderDashboard(): string {
-  const hrTableCount = hrSchema?.table_count ?? '—';
-  const payrollTableCount = payrollSchema?.table_count ?? '—';
   const sqlConnected = dbStatus?.sqlserver.connected;
   const mysqlConnected = dbStatus?.mysql.connected;
-
-  let hrTotalRows = 0;
-  let payrollTotalRows = 0;
-  if (hrSchema?.tables) {
-    for (const t of Object.values(hrSchema.tables)) { hrTotalRows += t.row_count || 0; }
-  }
-  if (payrollSchema?.tables) {
-    for (const t of Object.values(payrollSchema.tables)) { payrollTotalRows += t.row_count || 0; }
-  }
-
-  const totalTables = (hrSchema?.table_count ?? 0) + (payrollSchema?.table_count ?? 0);
+  
+  const healthScore = dataQuality?.health_score ?? '—';
+  const reconAlerts = (reconciliationData?.summary?.missing_in_hr_count || 0) + (reconciliationData?.summary?.missing_in_payroll_count || 0);
+  const anomalies = dataQuality?.salary_anomalies ?? 0;
+  const totalEmployees = reconciliationData?.summary?.total_hr ?? '—';
 
   return `
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">SQL Server</span>
-          <span class="stat-icon">🗄️</span>
+          <span class="stat-label">Integration Health</span>
+          <span class="stat-icon">❤️</span>
         </div>
-        <div class="stat-value">
-          <span class="status-badge ${sqlConnected === undefined ? 'checking' : sqlConnected ? 'online' : 'offline'}">
-            ● ${sqlConnected === undefined ? 'Checking...' : sqlConnected ? 'Connected' : 'Offline'}
-          </span>
-        </div>
-        <div class="stat-change positive">HUMAN_2025</div>
+        <div class="stat-value ${healthScore >= 90 ? 'positive-text' : 'negative-text'}">${healthScore}%</div>
+        <div class="stat-change ${healthScore >= 90 ? 'positive' : 'negative'}">System Sync Quality</div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">MySQL</span>
-          <span class="stat-icon">🐬</span>
+          <span class="stat-label">Reconciliation Alerts</span>
+          <span class="stat-icon">⚖️</span>
         </div>
-        <div class="stat-value">
-          <span class="status-badge ${mysqlConnected === undefined ? 'checking' : mysqlConnected ? 'online' : 'offline'}">
-            ● ${mysqlConnected === undefined ? 'Checking...' : mysqlConnected ? 'Connected' : 'Offline'}
-          </span>
-        </div>
-        <div class="stat-change positive">PAYROLL_2026</div>
+        <div class="stat-value ${reconAlerts > 0 ? 'negative-text' : 'positive-text'}">${reconAlerts}</div>
+        <div class="stat-change ${reconAlerts > 0 ? 'negative' : 'positive'}">Missing Cross-Records</div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">Total Tables</span>
-          <span class="stat-icon">📋</span>
+          <span class="stat-label">Data Quality Index</span>
+          <span class="stat-icon">🛡️</span>
         </div>
-        <div class="stat-value">${totalTables || '—'}</div>
-        <div class="stat-change positive">${hrTableCount} HR · ${payrollTableCount} Payroll</div>
+        <div class="stat-value ${anomalies > 0 ? 'negative-text' : 'positive-text'}">${anomalies} Issues</div>
+        <div class="stat-change ${anomalies > 0 ? 'negative' : 'positive'}">Suspicious anomalies</div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">Total Records</span>
-          <span class="stat-icon">💎</span>
+          <span class="stat-label">Unified Employee Count</span>
+          <span class="stat-icon">👥</span>
         </div>
-        <div class="stat-value">${(hrTotalRows + payrollTotalRows).toLocaleString()}</div>
-        <div class="stat-change positive">${hrTotalRows.toLocaleString()} HR · ${payrollTotalRows.toLocaleString()} Payroll</div>
+        <div class="stat-value">${totalEmployees}</div>
+        <div class="stat-change positive">Master Records</div>
       </div>
     </div>
-    <div class="content-grid">
+    
+    <div class="stats-grid" style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(2, 1fr);">
+      <div class="stat-card" style="border-left: 4px solid var(--sql-color)">
+        <div class="stat-header">
+          <span class="stat-label">SQL Server (HUMAN_2025)</span>
+          <span class="stat-icon">🗄️</span>
+        </div>
+        <div class="stat-value"><span class="status-badge ${sqlConnected ? 'online' : 'offline'}">● ${sqlConnected ? 'Connected' : 'Offline'}</span></div>
+      </div>
+      <div class="stat-card" style="border-left: 4px solid var(--mysql-color)">
+        <div class="stat-header">
+          <span class="stat-label">MySQL (PAYROLL_2026)</span>
+          <span class="stat-icon">🐬</span>
+        </div>
+        <div class="stat-value"><span class="status-badge ${mysqlConnected ? 'online' : 'offline'}">● ${mysqlConnected ? 'Connected' : 'Offline'}</span></div>
+      </div>
+    </div>
+    
+    <div class="content-grid mt-6">
       ${renderSchemaCard('HUMAN_2025', 'sql-server', hrSchema)}
       ${renderSchemaCard('PAYROLL_2026', 'mysql', payrollSchema)}
     </div>
@@ -626,6 +665,252 @@ function renderActivityView(): string {
   `;
 }
 
+// ── Intelligence Platform Views ─────────────────────────────────
+
+function renderEmployee360(): string {
+  const searchUI = `
+    <div class="search-container">
+      <input type="text" id="emp-search-input" class="search-input" placeholder="Search by Name, ID, or Department..." value="${employeeSearchQuery}">
+      <button class="primary-btn" id="btn-emp-search">${isSearching ? 'Searching...' : 'Search'}</button>
+    </div>
+  `;
+
+  let resultsUI = '';
+  if (employeeSearchResults) {
+    if (employeeSearchResults.length === 0) {
+      resultsUI = `<div class="empty-state">No employees found.</div>`;
+    } else {
+      resultsUI = `
+        <table class="data-table mt-4">
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Department</th><th>Status</th><th>Payroll Sync</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            ${employeeSearchResults.map(e => `
+              <tr>
+                <td>${e.EmployeeID}</td>
+                <td>${e.FullName}</td>
+                <td>${e.DepartmentName || '—'}</td>
+                <td><span class="status-badge ${e.Status === 'Active' ? 'online' : 'offline'}">${e.Status || 'Unknown'}</span></td>
+                <td>
+                  ${e.HasPayroll ? `<span class="status-badge online">Synced ($${e.NetSalary})</span>` : `<span class="status-badge offline">Missing</span>`}
+                </td>
+                <td><button class="secondary-btn btn-view-emp" data-id="${e.EmployeeID}">View 360</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+  }
+
+  let profileUI = '';
+  if (selectedEmployee) {
+    const hr = selectedEmployee.hr;
+    const pr = selectedEmployee.payroll;
+    profileUI = `
+      <div class="profile-card mt-6 fade-in">
+        <div class="profile-header">
+          <div class="profile-avatar">${hr.FullName?.charAt(0) || '?'}</div>
+          <div class="profile-title-area">
+            <h2>${hr.FullName}</h2>
+            <p>${hr.PositionName || '—'} | ${hr.DepartmentName || '—'}</p>
+          </div>
+          <div class="profile-badge-area">
+             <span class="card-badge sql-server">Integrated Profile</span>
+          </div>
+        </div>
+        <div class="profile-body content-grid" style="grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px;">
+          <div class="profile-section hr-section card">
+            <div class="card-header"><h3 style="margin:0; font-size: 1rem;">HR Data (HUMAN_2025)</h3></div>
+            <div class="card-body">
+              <div class="detail-grid">
+                <div class="detail-item"><span>Employee ID</span><strong>${hr.EmployeeID}</strong></div>
+                <div class="detail-item"><span>Hire Date</span><strong>${hr.HireDate || '—'}</strong></div>
+                <div class="detail-item"><span>Email</span><strong>${hr.Email || '—'}</strong></div>
+                <div class="detail-item"><span>Phone</span><strong>${hr.PhoneNumber || '—'}</strong></div>
+                <div class="detail-item"><span>Status</span><strong>${hr.Status || '—'}</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="profile-section pr-section card">
+            <div class="card-header"><h3 style="margin:0; font-size: 1rem;">Payroll Data (PAYROLL_2026)</h3></div>
+            <div class="card-body">
+              ${!pr || !pr.SalaryMonth ? `<div class="empty-state">No payroll data found</div>` : `
+              <div class="detail-grid">
+                <div class="detail-item"><span>Month</span><strong>${pr.SalaryMonth}</strong></div>
+                <div class="detail-item"><span>Base Salary</span><strong>$${pr.BaseSalary}</strong></div>
+                <div class="detail-item"><span>Bonus</span><strong>$${pr.Bonus}</strong></div>
+                <div class="detail-item"><span>Deductions</span><strong>$${pr.Deductions}</strong></div>
+                <div class="detail-item"><span>Net Salary</span><strong class="highlight" style="color: var(--primary)">$${pr.NetSalary}</strong></div>
+              </div>
+              `}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card">
+      <div class="card-header">
+        <h3>Employee Directory</h3>
+      </div>
+      <div class="card-body">
+        ${searchUI}
+        ${resultsUI}
+      </div>
+    </div>
+    ${profileUI}
+  `;
+}
+
+function renderReconciliation(): string {
+  if (!reconciliationData) return `<div class="loading-spinner">Loading...</div>`;
+  
+  const sum = reconciliationData.summary;
+  const missingHr = reconciliationData.missing_in_hr;
+  const missingPr = reconciliationData.missing_in_payroll;
+  
+  return `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Total in HR</span><span class="stat-icon">👥</span></div>
+        <div class="stat-value">${sum.total_hr}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Total in Payroll</span><span class="stat-icon">💰</span></div>
+        <div class="stat-value">${sum.total_payroll}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Missing in Payroll</span><span class="stat-icon">⚠️</span></div>
+        <div class="stat-value ${sum.missing_in_payroll_count > 0 ? 'negative-text' : 'positive-text'}">${sum.missing_in_payroll_count}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Missing in HR</span><span class="stat-icon">⚠️</span></div>
+        <div class="stat-value ${sum.missing_in_hr_count > 0 ? 'negative-text' : 'positive-text'}">${sum.missing_in_hr_count}</div>
+      </div>
+    </div>
+    
+    <div class="content-grid mt-6">
+      <div class="card">
+        <div class="card-header"><h3>Found in HR, Missing in Payroll</h3></div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead>
+            <tbody>
+              ${missingPr.length === 0 ? '<tr><td colspan="3" class="text-center">No discrepancies</td></tr>' : 
+                missingPr.map((e: any) => `<tr><td>${e.EmployeeID}</td><td>${e.FullName}</td><td>${e.Status}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Found in Payroll, Missing in HR</h3></div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead>
+            <tbody>
+              ${missingHr.length === 0 ? '<tr><td colspan="3" class="text-center">No discrepancies</td></tr>' : 
+                missingHr.map((e: any) => `<tr><td>${e.EmployeeID}</td><td>${e.FullName}</td><td>${e.Status}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuality(): string {
+  if (!dataQuality) return `<div class="loading-spinner">Loading...</div>`;
+  const anomalies = dataQuality.anomalies_list;
+  
+  return `
+    <div class="card mb-6">
+      <div class="card-body" style="text-align: center; padding: 40px;">
+        <h2 style="font-size: 3rem; color: ${dataQuality.health_score >= 90 ? 'var(--success)' : 'var(--danger)'}; margin-bottom: 10px;">
+          ${dataQuality.health_score}%
+        </h2>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Overall Data Quality Score</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h3>Suspicious Salary Outliers</h3>
+        <span class="card-badge mysql">${anomalies.length} Found</span>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="data-table">
+          <thead>
+            <tr><th>Employee ID</th><th>Month</th><th>Base Salary</th><th>Bonus</th><th>Deductions</th><th>Net Salary</th></tr>
+          </thead>
+          <tbody>
+            ${anomalies.length === 0 ? '<tr><td colspan="6" class="text-center">No anomalies detected</td></tr>' : 
+              anomalies.map((a: any) => `
+                <tr>
+                  <td>${a.EmployeeID}</td><td>${a.SalaryMonth}</td>
+                  <td>$${a.BaseSalary}</td><td>$${a.Bonus}</td>
+                  <td>$${a.Deductions}</td><td style="color:var(--danger); font-weight:bold">$${a.NetSalary}</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderReports(): string {
+  const tabs = [
+    { id: 'compensation', label: 'Employee Compensation' },
+    { id: 'exceptions', label: 'Sync Exceptions' }
+  ];
+
+  const reportDataHtml = reportData ? `
+    <div class="card mt-6 fade-in">
+      <div class="card-header">
+        <h3>${reportData.title}</h3>
+        <button class="secondary-btn" onclick="window.print()">Print Report</button>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              ${Object.keys(reportData.data[0] || {}).map(k => `<th>${k}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.data.length === 0 ? '<tr><td colspan="100%" class="text-center">No data available</td></tr>' : 
+              reportData.data.map((row: any) => `
+                <tr>
+                  ${Object.values(row).map(v => `<td>${v !== null ? v : '—'}</td>`).join('')}
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ` : `<div class="empty-state mt-6">Select a report to generate</div>`;
+
+  return `
+    <div class="card">
+      <div class="card-header"><h3>Report Generator</h3></div>
+      <div class="card-body">
+        <div style="display:flex; gap:16px;">
+          ${tabs.map(t => `
+            <button class="primary-btn report-tab ${currentReportType === t.id ? 'active' : ''}" data-type="${t.id}" style="${currentReportType !== t.id ? 'background:var(--bg-lighter); color:var(--text-main); border:1px solid var(--border-color)' : ''}">
+              Generate ${t.label} Report
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+    ${reportDataHtml}
+  `;
+}
+
 // ── Event Listeners ─────────────────────────────────────────────
 function attachEventListeners(): void {
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -647,16 +932,67 @@ function attachEventListeners(): void {
     currentView = 'dashboard'; authTab = 'login';
     render();
   });
+  
+  // Intelligence Events
+  document.getElementById('btn-emp-search')?.addEventListener('click', async () => {
+    const input = document.getElementById('emp-search-input') as HTMLInputElement;
+    if (input) {
+      employeeSearchQuery = input.value;
+      isSearching = true;
+      render();
+      const res = await api.searchEmployees(employeeSearchQuery);
+      employeeSearchResults = res.data || [];
+      isSearching = false;
+      render();
+    }
+  });
+  
+  document.querySelectorAll('.btn-view-emp').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = (e.currentTarget as HTMLElement).dataset.id;
+      if (id) {
+        const res = await api.getEmployee360(parseInt(id, 10));
+        if (res.data) {
+          selectedEmployee = res.data;
+          render();
+        }
+      }
+    });
+  });
+  
+  document.querySelectorAll('.report-tab').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const type = (e.currentTarget as HTMLElement).dataset.type;
+      if (type) {
+        currentReportType = type;
+        const res = await api.getReport(type);
+        if (res.data) {
+          reportData = res.data;
+          render();
+        }
+      }
+    });
+  });
 }
 
 // ── Data Loading ────────────────────────────────────────────────
 async function loadAllData(): Promise<void> {
-  const [statusResult, hrResult, payrollResult] = await Promise.all([
+  const [statusResult, hrResult, payrollResult, reconResult, qualityResult] = await Promise.all([
     api.dashboardStatus(), api.hrSchema(), api.payrollSchema(),
+    api.getReconciliation(), api.getDataQuality()
   ]);
+  
   if (statusResult.data) dbStatus = statusResult.data;
   if (hrResult.data) hrSchema = hrResult.data;
   if (payrollResult.data) payrollSchema = payrollResult.data;
+  if (reconResult.data) reconciliationData = reconResult.data;
+  if (qualityResult.data) dataQuality = qualityResult.data;
+  
+  if (currentView === 'reports') {
+    const reportRes = await api.getReport(currentReportType);
+    if (reportRes.data) reportData = reportRes.data;
+  }
+  
   render();
 }
 

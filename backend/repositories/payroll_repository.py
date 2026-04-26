@@ -88,9 +88,33 @@ class PayrollRepository:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM `{table_name}`")
             return cur.fetchone()["cnt"]
 
-    # ── Placeholder: Real queries will go here after schema discovery ──
-    # Phase 2 will add methods like:
-    #   get_payroll_records()
-    #   get_salary_by_employee()
-    #   get_payroll_summary()
-    # Based on actual PAYROLL_2026 tables.
+    # ── Phase 2: Real business methods ───────────────────────────
+    @staticmethod
+    def get_employee_payroll(employee_id: int) -> dict:
+        """Get payroll record (latest salary) for an employee."""
+        with mysql_cursor() as cur:
+            cur.execute("""
+                SELECT * FROM salaries
+                WHERE EmployeeID = %s
+                ORDER BY SalaryMonth DESC LIMIT 1
+            """, (employee_id,))
+            return cur.fetchone()
+
+    @staticmethod
+    def get_all_employees_payroll() -> list[dict]:
+        """Get all payroll employees for reconciliation."""
+        with mysql_cursor() as cur:
+            cur.execute("SELECT EmployeeID, FullName, Status FROM employees_payroll")
+            return cur.fetchall()
+            
+    @staticmethod
+    def get_salary_anomalies() -> list[dict]:
+        """Find salary anomalies (e.g. huge differences or negative values)."""
+        with mysql_cursor() as cur:
+            cur.execute("""
+                SELECT EmployeeID, SalaryMonth, BaseSalary, Bonus, Deductions, NetSalary
+                FROM salaries
+                WHERE BaseSalary < 0 OR NetSalary < 0 OR Bonus > BaseSalary * 2
+                LIMIT 50
+            """)
+            return cur.fetchall()

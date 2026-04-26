@@ -111,6 +111,13 @@ export const api = {
   hrSchema: () => fetchApi<SchemaResponse>('/api/hr/schema'),
   payrollSchema: () => fetchApi<SchemaResponse>('/api/payroll/schema'),
 
+  // Dashboard Features
+  searchEmployees: (q: string) => fetchApi<any>(`/api/dashboard/employees/search?q=${encodeURIComponent(q)}`),
+  getEmployee360: (id: number) => fetchApi<any>(`/api/dashboard/employee/${id}`),
+  getReconciliation: () => fetchApi<any>('/api/dashboard/reconciliation'),
+  getDataQuality: () => fetchApi<any>('/api/dashboard/quality'),
+  getReport: (type: string) => fetchApi<any>(`/api/dashboard/reports/${type}`),
+
   // Auth
   register: (data: RegisterRequest) => postApi<AuthResponse>('/api/auth/register', data),
   login: (creds: LoginRequest) => postApi<AuthResponse>('/api/auth/login', creds),
