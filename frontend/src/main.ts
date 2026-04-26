@@ -7,7 +7,7 @@ import { api } from './api.ts';
 import type { SystemStatus, SchemaResponse, AuthResponse } from './api.ts';
 
 // ── State ───────────────────────────────────────────────────────
-let currentView = 'dashboard';
+let currentView = 'employee360';
 let dbStatus: SystemStatus | null = null;
 let hrSchema: SchemaResponse | null = null;
 let payrollSchema: SchemaResponse | null = null;
@@ -20,6 +20,26 @@ let employeeSearchQuery = '';
 let employeeSearchResults: any[] | null = null;
 let selectedEmployee: any = null;
 let isSearching = false;
+
+// ── Icons ───────────────────────────────────────────────────────
+const ICONS = {
+  dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>`,
+  employee360: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+  reconciliation: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"></path><path d="M3 10l4-4 4 4"></path><path d="M7 6v15"></path><path d="M21 14l-4 4-4-4"></path><path d="M17 4v14"></path></svg>`,
+  reports: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+  api_explorer: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+  refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`,
+  logout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
+  bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
+  database: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>`,
+  alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
+  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`,
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+  user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+  lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`
+};
 
 // ── Auth State ──────────────────────────────────────────────────
 let authToken: string | null = localStorage.getItem('auth_token');
@@ -83,7 +103,7 @@ function renderAuthPage(): string {
 
       <div class="login-card">
         <div class="login-header">
-          <div class="login-brand-icon">⚡</div>
+          <div class="login-brand-icon">${ICONS.bolt}</div>
           <h1 class="login-title">NexusBridge</h1>
           <p class="login-subtitle">HR & Payroll Middleware Dashboard</p>
         </div>
@@ -113,7 +133,7 @@ function renderLoginForm(): string {
       <div class="form-group">
         <label class="form-label" for="login-username">Username</label>
         <div class="input-wrapper">
-          <span class="input-icon">👤</span>
+          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.user}</span>
           <input type="text" id="login-username" class="form-input" placeholder="Enter username" autocomplete="username" required />
         </div>
       </div>
@@ -121,7 +141,7 @@ function renderLoginForm(): string {
       <div class="form-group">
         <label class="form-label" for="login-password">Password</label>
         <div class="input-wrapper">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.lock}</span>
           <input type="password" id="login-password" class="form-input" placeholder="Enter password" autocomplete="current-password" required />
         </div>
       </div>
@@ -132,7 +152,6 @@ function renderLoginForm(): string {
 
       <div class="login-actions">
         <a href="#" class="login-action-link" id="link-forgot-password">
-          <span class="login-action-icon">🔑</span>
           Forgot password?
         </a>
       </div>
@@ -146,7 +165,7 @@ function renderRegisterForm(): string {
       <div class="form-group">
         <label class="form-label" for="reg-username">Username</label>
         <div class="input-wrapper">
-          <span class="input-icon">👤</span>
+          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.user}</span>
           <input type="text" id="reg-username" class="form-input" placeholder="Choose a username" autocomplete="username" required minlength="3" maxlength="32" />
         </div>
         <span class="form-hint">3–32 characters, letters, numbers, underscores</span>
@@ -155,7 +174,7 @@ function renderRegisterForm(): string {
       <div class="form-group">
         <label class="form-label" for="reg-email">Email</label>
         <div class="input-wrapper">
-          <span class="input-icon">✉️</span>
+          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.mail}</span>
           <input type="email" id="reg-email" class="form-input" placeholder="your@email.com" autocomplete="email" required />
         </div>
       </div>
@@ -163,7 +182,7 @@ function renderRegisterForm(): string {
       <div class="form-group">
         <label class="form-label" for="reg-password">Password</label>
         <div class="input-wrapper">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.lock}</span>
           <input type="password" id="reg-password" class="form-input" placeholder="Min 6 characters" autocomplete="new-password" required minlength="6" />
         </div>
       </div>
@@ -171,7 +190,7 @@ function renderRegisterForm(): string {
       <div class="form-group">
         <label class="form-label" for="reg-confirm">Confirm Password</label>
         <div class="input-wrapper">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.lock}</span>
           <input type="password" id="reg-confirm" class="form-input" placeholder="Repeat password" autocomplete="new-password" required />
         </div>
       </div>
@@ -302,7 +321,7 @@ function renderSidebar(): string {
   return `
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <div class="brand-icon">⚡</div>
+        <div class="brand-icon">${ICONS.bolt}</div>
         <div>
           <h1>NexusBridge</h1>
           <span class="subtitle">HR & Payroll Middleware</span>
@@ -311,45 +330,27 @@ function renderSidebar(): string {
 
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <div class="nav-section-title">Overview</div>
-          <div class="nav-item ${currentView === 'dashboard' ? 'active' : ''}" data-view="dashboard">
-            <span class="nav-icon">📊</span> Dashboard
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">Databases</div>
-          <div class="nav-item ${currentView === 'hr' ? 'active' : ''}" data-view="hr">
-            <span class="nav-icon">👥</span> HR — HUMAN_2025
-          </div>
-          <div class="nav-item ${currentView === 'payroll' ? 'active' : ''}" data-view="payroll">
-            <span class="nav-icon">💰</span> Payroll — PAYROLL_2026
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">Tools</div>
-          <div class="nav-item ${currentView === 'sync' ? 'active' : ''}" data-view="sync">
-            <span class="nav-icon">🔄</span> Sync Status
-          </div>
-          <div class="nav-item ${currentView === 'activity' ? 'active' : ''}" data-view="activity">
-            <span class="nav-icon">📋</span> Activity Log
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">Intelligence</div>
           <div class="nav-item ${currentView === 'employee360' ? 'active' : ''}" data-view="employee360">
-            <span class="nav-icon">🔍</span> Employee 360
+            <span class="nav-icon">${ICONS.employee360}</span> Employee 360
+          </div>
+          <div class="nav-item ${currentView === 'dashboard' ? 'active' : ''}" data-view="dashboard">
+            <span class="nav-icon">${ICONS.dashboard}</span> Dashboard
           </div>
           <div class="nav-item ${currentView === 'reconciliation' ? 'active' : ''}" data-view="reconciliation">
-            <span class="nav-icon">⚖️</span> Reconciliation
-          </div>
-          <div class="nav-item ${currentView === 'quality' ? 'active' : ''}" data-view="quality">
-            <span class="nav-icon">🛡️</span> Data Quality
+            <span class="nav-icon">${ICONS.reconciliation}</span> Reconciliation
           </div>
           <div class="nav-item ${currentView === 'reports' ? 'active' : ''}" data-view="reports">
-            <span class="nav-icon">📑</span> Reports
+            <span class="nav-icon">${ICONS.reports}</span> Reports
+          </div>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Developer</div>
+          <div class="nav-item ${currentView === 'api_explorer' ? 'active' : ''}" data-view="api_explorer">
+            <span class="nav-icon">${ICONS.api_explorer}</span> API Explorer
+          </div>
+          <div class="nav-item ${currentView === 'settings' ? 'active' : ''}" data-view="settings">
+            <span class="nav-icon">${ICONS.settings}</span> Settings
           </div>
         </div>
       </nav>
@@ -381,26 +382,20 @@ function renderSidebar(): string {
 
 function renderHeader(): string {
   const titles: Record<string, string> = {
+    employee360: 'Employee 360',
     dashboard: 'Executive Dashboard',
-    hr: 'HUMAN_2025 — SQL Server',
-    payroll: 'PAYROLL_2026 — MySQL',
-    sync: 'Sync Status',
-    activity: 'Activity Log',
-    employee360: 'Unified Employee 360',
     reconciliation: 'Reconciliation Center',
-    quality: 'Data Quality Monitor',
-    reports: 'Actionable Reports'
+    reports: 'Actionable Reports',
+    api_explorer: 'API Explorer',
+    settings: 'Settings'
   };
   const subtitles: Record<string, string> = {
-    dashboard: 'Intelligent middleware metrics & health',
-    hr: 'Schema explorer for HR database',
-    payroll: 'Schema explorer for Payroll database',
-    sync: 'Cross-database comparison',
-    activity: 'Recent middleware operations',
     employee360: 'Search & view integrated HR/Payroll profiles',
+    dashboard: 'Intelligent middleware metrics & health',
     reconciliation: 'Detect & resolve cross-database anomalies',
-    quality: 'Platform data integrity & sync score',
-    reports: 'Generate read-only cross-db reports'
+    reports: 'Generate read-only cross-db reports',
+    api_explorer: 'Test endpoints and view live schema data',
+    settings: 'System configuration and preferences'
   };
 
   return `
@@ -412,9 +407,8 @@ function renderHeader(): string {
         </div>
       </div>
       <div class="header-right">
-        <button class="header-btn" id="btn-refresh">🔄 Refresh</button>
-        <button class="header-btn" id="btn-api-docs">📖 API Docs</button>
-        <button class="header-btn header-btn-logout" id="btn-logout">🚪 Logout</button>
+        <button class="header-btn" id="btn-refresh"><span style="width: 14px; height: 14px">${ICONS.refresh}</span> Refresh</button>
+        <button class="header-btn header-btn-logout" id="btn-logout"><span style="width: 14px; height: 14px">${ICONS.logout}</span> Logout</button>
       </div>
     </header>
   `;
@@ -422,16 +416,13 @@ function renderHeader(): string {
 
 function renderPage(): string {
   switch (currentView) {
-    case 'dashboard': return renderDashboard();
-    case 'hr': return renderSchemaView('hr');
-    case 'payroll': return renderSchemaView('payroll');
-    case 'sync': return renderSyncView();
-    case 'activity': return renderActivityView();
     case 'employee360': return renderEmployee360();
+    case 'dashboard': return renderDashboard();
     case 'reconciliation': return renderReconciliation();
-    case 'quality': return renderQuality();
     case 'reports': return renderReports();
-    default: return renderDashboard();
+    case 'api_explorer': return renderApiExplorer();
+    case 'settings': return renderSettings();
+    default: return renderEmployee360();
   }
 }
 
@@ -449,7 +440,7 @@ function renderDashboard(): string {
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">Integration Health</span>
-          <span class="stat-icon">❤️</span>
+          <span class="stat-icon" style="width:20px;height:20px">${ICONS.heart}</span>
         </div>
         <div class="stat-value ${healthScore >= 90 ? 'positive-text' : 'negative-text'}">${healthScore}%</div>
         <div class="stat-change ${healthScore >= 90 ? 'positive' : 'negative'}">System Sync Quality</div>
@@ -457,7 +448,7 @@ function renderDashboard(): string {
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">Reconciliation Alerts</span>
-          <span class="stat-icon">⚖️</span>
+          <span class="stat-icon" style="width:20px;height:20px">${ICONS.reconciliation}</span>
         </div>
         <div class="stat-value ${reconAlerts > 0 ? 'negative-text' : 'positive-text'}">${reconAlerts}</div>
         <div class="stat-change ${reconAlerts > 0 ? 'negative' : 'positive'}">Missing Cross-Records</div>
@@ -465,7 +456,7 @@ function renderDashboard(): string {
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">Data Quality Index</span>
-          <span class="stat-icon">🛡️</span>
+          <span class="stat-icon" style="width:20px;height:20px">${ICONS.alert}</span>
         </div>
         <div class="stat-value ${anomalies > 0 ? 'negative-text' : 'positive-text'}">${anomalies} Issues</div>
         <div class="stat-change ${anomalies > 0 ? 'negative' : 'positive'}">Suspicious anomalies</div>
@@ -473,7 +464,7 @@ function renderDashboard(): string {
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">Unified Employee Count</span>
-          <span class="stat-icon">👥</span>
+          <span class="stat-icon" style="width:20px;height:20px">${ICONS.user}</span>
         </div>
         <div class="stat-value">${totalEmployees}</div>
         <div class="stat-change positive">Master Records</div>
@@ -484,14 +475,14 @@ function renderDashboard(): string {
       <div class="stat-card" style="border-left: 4px solid var(--sql-color)">
         <div class="stat-header">
           <span class="stat-label">SQL Server (HUMAN_2025)</span>
-          <span class="stat-icon">🗄️</span>
+          <span class="stat-icon" style="width:20px;height:20px">${ICONS.database}</span>
         </div>
         <div class="stat-value"><span class="status-badge ${sqlConnected ? 'online' : 'offline'}">● ${sqlConnected ? 'Connected' : 'Offline'}</span></div>
       </div>
       <div class="stat-card" style="border-left: 4px solid var(--mysql-color)">
         <div class="stat-header">
           <span class="stat-label">MySQL (PAYROLL_2026)</span>
-          <span class="stat-icon">🐬</span>
+          <span class="stat-icon" style="width:20px;height:20px">${ICONS.database}</span>
         </div>
         <div class="stat-value"><span class="status-badge ${mysqlConnected ? 'online' : 'offline'}">● ${mysqlConnected ? 'Connected' : 'Offline'}</span></div>
       </div>
@@ -552,154 +543,66 @@ function renderSchemaCard(title: string, badge: string, schema: SchemaResponse |
   `;
 }
 
-function renderSchemaView(db: 'hr' | 'payroll'): string {
-  const schema = db === 'hr' ? hrSchema : payrollSchema;
-  const title = db === 'hr' ? 'HUMAN_2025' : 'PAYROLL_2026';
-  const badge = db === 'hr' ? 'sql-server' : 'mysql';
-
-  if (!schema) {
-    return `
-      <div class="card">
-        <div class="card-header"><h3>Loading ${title} schema...</h3></div>
-        <div class="card-body"><div class="loading-skeleton" style="height: 200px;"></div></div>
-      </div>
-    `;
-  }
-
-  const tableCards = Object.entries(schema.tables).map(([name, info]) => {
-    const typedInfo = info as { columns: Array<{COLUMN_NAME: string; DATA_TYPE: string; IS_NULLABLE: string}>; row_count: number };
-    const colRows = typedInfo.columns.map(c => `
-      <tr>
-        <td class="mono">${c.COLUMN_NAME || (c as unknown as Record<string,string>)['COLUMN_NAME'] || '—'}</td>
-        <td>${c.DATA_TYPE || (c as unknown as Record<string,string>)['DATA_TYPE'] || '—'}</td>
-        <td>${c.IS_NULLABLE || (c as unknown as Record<string,string>)['IS_NULLABLE'] || '—'}</td>
-      </tr>
-    `).join('');
-
-    return `
-      <div class="card" style="margin-bottom: 16px;">
-        <div class="card-header">
-          <h3 class="mono">${name}</h3>
-          <span class="card-badge ${badge}">${typedInfo.row_count?.toLocaleString() || 0} rows</span>
-        </div>
-        <div class="card-body" style="padding: 0;">
-          <table class="data-table">
-            <thead><tr><th>Column</th><th>Type</th><th>Nullable</th></tr></thead>
-            <tbody>${colRows}</tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  return tableCards || '<p style="color: var(--text-muted);">No tables found.</p>';
-}
-
-function renderSyncView(): string {
-  const bothConnected = dbStatus?.sqlserver.connected && dbStatus?.mysql.connected;
-  const syncLabel = bothConnected ? 'Both Online' : 'Degraded';
-  const syncBadgeClass = bothConnected ? 'online' : 'offline';
-
-  return `
-    <div class="card">
-      <div class="card-header">
-        <h3>Cross-Database Sync Status</h3>
-        <span class="card-badge sql-server">Read-Only</span>
-      </div>
-      <div class="card-body">
-        <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">
-          The sync checker compares schemas between HUMAN_2025 and PAYROLL_2026 to detect discrepancies.
-          No data is modified — this is a read-only diagnostic tool.
-        </p>
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-          <span class="status-badge ${syncBadgeClass}">● ${syncLabel}</span>
-        </div>
-        <div class="stats-grid" style="margin-bottom: 0; grid-template-columns: repeat(2, 1fr);">
-          <div class="stat-card">
-            <div class="stat-header"><span class="stat-label">HR Tables</span><span class="stat-icon">🗄️</span></div>
-            <div class="stat-value">${hrSchema?.table_count ?? '—'}</div>
-            <div class="stat-change positive">HUMAN_2025</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-header"><span class="stat-label">Payroll Tables</span><span class="stat-icon">🐬</span></div>
-            <div class="stat-value">${payrollSchema?.table_count ?? '—'}</div>
-            <div class="stat-change positive">PAYROLL_2026</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderActivityView(): string {
-  return `
-    <div class="card">
-      <div class="card-header">
-        <h3>Recent API Activity</h3>
-        <span class="card-badge sql-server">Middleware</span>
-      </div>
-      <div class="card-body">
-        <div class="activity-item">
-          <div class="activity-icon read">📖</div>
-          <div class="activity-text">
-            <div class="action">Dashboard loaded — schema discovery executed</div>
-            <div class="time">Just now</div>
-          </div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon sync">🔄</div>
-          <div class="activity-text">
-            <div class="action">Database connection status checked</div>
-            <div class="time">On page load</div>
-          </div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon auth">🔑</div>
-          <div class="activity-text">
-            <div class="action">Auth module initialized</div>
-            <div class="time">Startup</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 // ── Intelligence Platform Views ─────────────────────────────────
 
 function renderEmployee360(): string {
   const searchUI = `
-    <div class="search-container">
-      <input type="text" id="emp-search-input" class="search-input" placeholder="Search by Name, ID, or Department..." value="${employeeSearchQuery}">
-      <button class="primary-btn" id="btn-emp-search">${isSearching ? 'Searching...' : 'Search'}</button>
+    <div class="hero-section card" style="background: var(--bg-card); border: 1px solid var(--accent-border); padding: 48px 32px; text-align: center; position: relative; overflow: hidden; margin-bottom: 32px; box-shadow: var(--shadow-glow);">
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient-accent);"></div>
+      <div style="position: relative; z-index: 10;">
+        <div style="width: 64px; height: 64px; background: var(--accent-glow); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px;">
+           <span style="width: 32px; height: 32px;">${ICONS.search}</span>
+        </div>
+        <h2 style="font-size: 32px; margin-bottom: 12px; font-weight: 800; letter-spacing: -0.02em;">Employee 360 Intelligence</h2>
+        <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
+          Instantly retrieve unified HR and Payroll records across systems. Enter an ID, Name, or Department.
+        </p>
+        <div class="search-container" style="max-width: 640px; margin: 0 auto; display: flex; gap: 12px; background: var(--bg-card-solid); padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+          <input type="text" id="emp-search-input" class="search-input" style="border: none; background: transparent; font-size: 16px; padding: 8px 16px;" placeholder="Search across all systems..." value="${employeeSearchQuery}">
+          <button class="primary-btn" id="btn-emp-search" style="padding: 12px 32px; font-size: 15px;">${isSearching ? 'Searching...' : 'Search Employee'}</button>
+        </div>
+        <div class="search-suggestions" style="margin-top: 20px; font-size: 13px; color: var(--text-muted);">
+          <span>Suggested queries:</span>
+          <span class="suggestion-tag" style="cursor: pointer; padding: 4px 12px; background: rgba(255,255,255,0.03); border-radius: 999px; margin: 0 4px; transition: all 0.2s;" onmouseover="this.style.background='var(--accent-glow)';this.style.color='var(--accent)';" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='var(--text-muted)';" onclick="document.getElementById('emp-search-input').value='Smith'; document.getElementById('btn-emp-search').click()">Smith</span>
+          <span class="suggestion-tag" style="cursor: pointer; padding: 4px 12px; background: rgba(255,255,255,0.03); border-radius: 999px; margin: 0 4px; transition: all 0.2s;" onmouseover="this.style.background='var(--accent-glow)';this.style.color='var(--accent)';" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='var(--text-muted)';" onclick="document.getElementById('emp-search-input').value='Engineering'; document.getElementById('btn-emp-search').click()">Engineering Department</span>
+        </div>
+      </div>
     </div>
   `;
 
   let resultsUI = '';
   if (employeeSearchResults) {
     if (employeeSearchResults.length === 0) {
-      resultsUI = `<div class="empty-state">No employees found.</div>`;
+      resultsUI = `<div class="empty-state">No employees found matching "${employeeSearchQuery}".</div>`;
     } else {
       resultsUI = `
-        <table class="data-table mt-4">
-          <thead>
-            <tr><th>ID</th><th>Name</th><th>Department</th><th>Status</th><th>Payroll Sync</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            ${employeeSearchResults.map(e => `
-              <tr>
-                <td>${e.EmployeeID}</td>
-                <td>${e.FullName}</td>
-                <td>${e.DepartmentName || '—'}</td>
-                <td><span class="status-badge ${e.Status === 'Active' ? 'online' : 'offline'}">${e.Status || 'Unknown'}</span></td>
-                <td>
-                  ${e.HasPayroll ? `<span class="status-badge online">Synced ($${e.NetSalary})</span>` : `<span class="status-badge offline">Missing</span>`}
-                </td>
-                <td><button class="secondary-btn btn-view-emp" data-id="${e.EmployeeID}">View 360</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3>Search Results</h3>
+            <span class="card-badge sql-server">${employeeSearchResults.length} found</span>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr><th>Employee ID</th><th>Full Name</th><th>Department</th><th>Status</th><th>Payroll Sync</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                ${employeeSearchResults.map(e => `
+                  <tr>
+                    <td class="mono">${e.EmployeeID}</td>
+                    <td style="font-weight: 600;">${e.FullName}</td>
+                    <td>${e.DepartmentName || '—'}</td>
+                    <td><span class="status-badge ${e.Status === 'Active' ? 'online' : 'offline'}">● ${e.Status || 'Unknown'}</span></td>
+                    <td>
+                      ${e.HasPayroll ? `<span class="status-badge online">● Synced ($${e.NetSalary})</span>` : `<span class="status-badge offline">● Missing Data</span>`}
+                    </td>
+                    <td><button class="secondary-btn btn-view-emp" data-id="${e.EmployeeID}">View 360 Profile</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
       `;
     }
   }
@@ -709,43 +612,59 @@ function renderEmployee360(): string {
     const hr = selectedEmployee.hr;
     const pr = selectedEmployee.payroll;
     profileUI = `
-      <div class="profile-card mt-6 fade-in">
-        <div class="profile-header">
-          <div class="profile-avatar">${hr.FullName?.charAt(0) || '?'}</div>
+      <div class="profile-card mt-6 fade-in" style="margin-top: 32px; border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
+        <div class="profile-header" style="background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.05) 100%); border-bottom: 1px solid var(--border); padding: 32px;">
+          <div class="profile-avatar" style="width: 80px; height: 80px; font-size: 32px;">${hr.FullName?.charAt(0) || '?'}</div>
           <div class="profile-title-area">
-            <h2>${hr.FullName}</h2>
-            <p>${hr.PositionName || '—'} | ${hr.DepartmentName || '—'}</p>
+            <h2 style="font-size: 24px; font-weight: 800; color: white;">${hr.FullName}</h2>
+            <p style="font-size: 15px; color: var(--text-secondary);">${hr.PositionName || '—'} • ${hr.DepartmentName || '—'}</p>
           </div>
           <div class="profile-badge-area">
-             <span class="card-badge sql-server">Integrated Profile</span>
+             <span class="card-badge sql-server" style="background: rgba(99,102,241,0.1); border-color: var(--accent); color: var(--accent-hover);">Master Record Connected</span>
           </div>
         </div>
-        <div class="profile-body content-grid" style="grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px;">
-          <div class="profile-section hr-section card">
-            <div class="card-header"><h3 style="margin:0; font-size: 1rem;">HR Data (HUMAN_2025)</h3></div>
-            <div class="card-body">
-              <div class="detail-grid">
-                <div class="detail-item"><span>Employee ID</span><strong>${hr.EmployeeID}</strong></div>
-                <div class="detail-item"><span>Hire Date</span><strong>${hr.HireDate || '—'}</strong></div>
-                <div class="detail-item"><span>Email</span><strong>${hr.Email || '—'}</strong></div>
-                <div class="detail-item"><span>Phone</span><strong>${hr.PhoneNumber || '—'}</strong></div>
-                <div class="detail-item"><span>Status</span><strong>${hr.Status || '—'}</strong></div>
-              </div>
+        <div class="profile-body content-grid" style="grid-template-columns: 1fr 1fr; gap: 0; padding: 0;">
+          <div class="profile-section hr-section" style="padding: 32px; border-right: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+               <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59,130,246,0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+                 <span style="width: 16px; height: 16px;">${ICONS.database}</span>
+               </div>
+               <h3 style="margin:0; font-size: 1.1rem;">HR Master Data</h3>
+               <span class="card-badge sql-server" style="margin-left: auto;">HUMAN_2025</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-item"><span>Employee ID</span><strong class="mono">${hr.EmployeeID}</strong></div>
+              <div class="detail-item"><span>Hire Date</span><strong>${hr.HireDate || '—'}</strong></div>
+              <div class="detail-item"><span>Email</span><strong>${hr.Email || '—'}</strong></div>
+              <div class="detail-item"><span>Phone</span><strong>${hr.PhoneNumber || '—'}</strong></div>
+              <div class="detail-item"><span>Status</span><span class="status-badge ${hr.Status === 'Active' ? 'online' : 'offline'}">● ${hr.Status || '—'}</span></div>
             </div>
           </div>
-          <div class="profile-section pr-section card">
-            <div class="card-header"><h3 style="margin:0; font-size: 1rem;">Payroll Data (PAYROLL_2026)</h3></div>
-            <div class="card-body">
-              ${!pr || !pr.SalaryMonth ? `<div class="empty-state">No payroll data found</div>` : `
-              <div class="detail-grid">
-                <div class="detail-item"><span>Month</span><strong>${pr.SalaryMonth}</strong></div>
-                <div class="detail-item"><span>Base Salary</span><strong>$${pr.BaseSalary}</strong></div>
-                <div class="detail-item"><span>Bonus</span><strong>$${pr.Bonus}</strong></div>
-                <div class="detail-item"><span>Deductions</span><strong>$${pr.Deductions}</strong></div>
-                <div class="detail-item"><span>Net Salary</span><strong class="highlight" style="color: var(--primary)">$${pr.NetSalary}</strong></div>
-              </div>
-              `}
+          <div class="profile-section pr-section" style="padding: 32px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+               <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(245,158,11,0.1); color: #f59e0b; display: flex; align-items: center; justify-content: center;">
+                 <span style="width: 16px; height: 16px;">${ICONS.database}</span>
+               </div>
+               <h3 style="margin:0; font-size: 1.1rem;">Payroll & Compensation</h3>
+               <span class="card-badge mysql" style="margin-left: auto;">PAYROLL_2026</span>
             </div>
+            ${!pr || !pr.SalaryMonth ? `
+              <div class="empty-state" style="background: rgba(248,113,113,0.05); color: var(--danger); border: 1px dashed rgba(248,113,113,0.2);">
+                <div style="font-size: 24px; margin-bottom: 12px;">⚠️</div>
+                No payroll record found for this employee.
+              </div>
+            ` : `
+              <div class="detail-grid">
+                <div class="detail-item"><span>Payroll Month</span><strong>${pr.SalaryMonth}</strong></div>
+                <div class="detail-item"><span>Base Salary</span><strong style="color: var(--text-primary);">$${pr.BaseSalary?.toLocaleString() || 0}</strong></div>
+                <div class="detail-item"><span>Bonus</span><strong style="color: var(--success);">$${pr.Bonus?.toLocaleString() || 0}</strong></div>
+                <div class="detail-item"><span>Deductions</span><strong style="color: var(--danger);">-$${pr.Deductions?.toLocaleString() || 0}</strong></div>
+                <div class="detail-item" style="border-top: 1px solid var(--border); margin-top: 8px; padding-top: 16px;">
+                   <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Net Salary</span>
+                   <strong style="font-size: 20px; color: var(--success);">$${pr.NetSalary?.toLocaleString() || 0}</strong>
+                </div>
+              </div>
+            `}
           </div>
         </div>
       </div>
@@ -753,15 +672,8 @@ function renderEmployee360(): string {
   }
 
   return `
-    <div class="card">
-      <div class="card-header">
-        <h3>Employee Directory</h3>
-      </div>
-      <div class="card-body">
-        ${searchUI}
-        ${resultsUI}
-      </div>
-    </div>
+    ${searchUI}
+    ${resultsUI}
     ${profileUI}
   `;
 }
@@ -776,19 +688,19 @@ function renderReconciliation(): string {
   return `
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Total in HR</span><span class="stat-icon">👥</span></div>
+        <div class="stat-header"><span class="stat-label">Total in HR</span><span class="stat-icon" style="width:20px;height:20px">${ICONS.user}</span></div>
         <div class="stat-value">${sum.total_hr}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Total in Payroll</span><span class="stat-icon">💰</span></div>
+        <div class="stat-header"><span class="stat-label">Total in Payroll</span><span class="stat-icon" style="width:20px;height:20px">${ICONS.database}</span></div>
         <div class="stat-value">${sum.total_payroll}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Missing in Payroll</span><span class="stat-icon">⚠️</span></div>
+        <div class="stat-header"><span class="stat-label">Missing in Payroll</span><span class="stat-icon" style="width:20px;height:20px">${ICONS.alert}</span></div>
         <div class="stat-value ${sum.missing_in_payroll_count > 0 ? 'negative-text' : 'positive-text'}">${sum.missing_in_payroll_count}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Missing in HR</span><span class="stat-icon">⚠️</span></div>
+        <div class="stat-header"><span class="stat-label">Missing in HR</span><span class="stat-icon" style="width:20px;height:20px">${ICONS.alert}</span></div>
         <div class="stat-value ${sum.missing_in_hr_count > 0 ? 'negative-text' : 'positive-text'}">${sum.missing_in_hr_count}</div>
       </div>
     </div>
@@ -817,46 +729,6 @@ function renderReconciliation(): string {
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderQuality(): string {
-  if (!dataQuality) return `<div class="loading-spinner">Loading...</div>`;
-  const anomalies = dataQuality.anomalies_list;
-  
-  return `
-    <div class="card mb-6">
-      <div class="card-body" style="text-align: center; padding: 40px;">
-        <h2 style="font-size: 3rem; color: ${dataQuality.health_score >= 90 ? 'var(--success)' : 'var(--danger)'}; margin-bottom: 10px;">
-          ${dataQuality.health_score}%
-        </h2>
-        <p style="color: var(--text-muted); font-size: 1.1rem;">Overall Data Quality Score</p>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="card-header">
-        <h3>Suspicious Salary Outliers</h3>
-        <span class="card-badge mysql">${anomalies.length} Found</span>
-      </div>
-      <div class="card-body" style="padding:0">
-        <table class="data-table">
-          <thead>
-            <tr><th>Employee ID</th><th>Month</th><th>Base Salary</th><th>Bonus</th><th>Deductions</th><th>Net Salary</th></tr>
-          </thead>
-          <tbody>
-            ${anomalies.length === 0 ? '<tr><td colspan="6" class="text-center">No anomalies detected</td></tr>' : 
-              anomalies.map((a: any) => `
-                <tr>
-                  <td>${a.EmployeeID}</td><td>${a.SalaryMonth}</td>
-                  <td>$${a.BaseSalary}</td><td>$${a.Bonus}</td>
-                  <td>$${a.Deductions}</td><td style="color:var(--danger); font-weight:bold">$${a.NetSalary}</td>
-                </tr>
-              `).join('')}
-          </tbody>
-        </table>
       </div>
     </div>
   `;
@@ -911,6 +783,81 @@ function renderReports(): string {
   `;
 }
 
+function renderApiExplorer(): string {
+  return `
+    <div class="card fade-in">
+      <div class="card-header" style="background: rgba(16, 185, 129, 0.05); border-bottom: 1px solid rgba(16, 185, 129, 0.2);">
+        <h3>Interactive API Explorer</h3>
+        <span class="card-badge sql-server" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">Developer Tools</span>
+      </div>
+      <div class="card-body" style="display: flex; gap: 32px; padding: 32px;">
+        <div style="width: 320px; border-right: 1px solid var(--border); padding-right: 32px;">
+          <h4 style="margin-bottom: 16px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Available Endpoints</h4>
+          <div class="api-endpoint-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="secondary-btn" style="text-align: left; padding: 12px; font-family: var(--mono); font-size: 12px; border-left: 3px solid #3b82f6;">GET /api/dashboard/status</button>
+            <button class="secondary-btn" style="text-align: left; padding: 12px; font-family: var(--mono); font-size: 12px; border-left: 3px solid transparent;">GET /api/hr/employees/search</button>
+            <button class="secondary-btn" style="text-align: left; padding: 12px; font-family: var(--mono); font-size: 12px; border-left: 3px solid transparent;">GET /api/payroll/quality</button>
+          </div>
+        </div>
+        <div style="flex: 1;">
+          <h4 style="margin-bottom: 16px; font-size: 14px;">Endpoint Configuration</h4>
+          <div style="background: var(--bg-card-solid); padding: 24px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 24px;">
+             <div style="font-family: var(--mono); color: #60a5fa; font-size: 16px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">GET <span style="color: white;">/api/dashboard/status</span></div>
+             <div style="display: flex; gap: 12px;">
+               <button class="primary-btn" onclick="document.getElementById('api-response').style.display='block'">Run Query</button>
+               <button class="secondary-btn">Headers</button>
+               <button class="secondary-btn">Params</button>
+             </div>
+          </div>
+          <h4 style="margin-bottom: 16px; font-size: 14px;">Response Output <span style="font-size: 12px; font-weight: 400; color: #10b981; margin-left: 12px;">200 OK • 42ms</span></h4>
+          <pre id="api-response" style="display: none; background: #0c0f18; padding: 24px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-family: var(--mono); font-size: 13px; overflow-x: auto; color: #34d399; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); line-height: 1.6;">
+{
+  "status": "success",
+  "data": {
+    "sqlserver": { "connected": true, "engine": "mssql" },
+    "mysql": { "connected": true, "engine": "mysql" }
+  }
+}
+          </pre>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSettings(): string {
+  return `
+    <div class="card fade-in">
+      <div class="card-header">
+        <h3>System Settings</h3>
+      </div>
+      <div class="card-body" style="padding: 32px;">
+        <p style="color: var(--text-muted); margin-bottom: 32px;">System settings and configurations are read-only in the current version.</p>
+        
+        <div class="content-grid" style="grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; background: rgba(255,255,255,0.02);">
+            <h4 style="margin-bottom: 20px; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 12px;">Account Information</h4>
+            <div class="detail-grid">
+               <div class="detail-item"><span>Current User</span><strong style="color: white;">${authUser?.username || '—'}</strong></div>
+               <div class="detail-item"><span>Role</span><span class="status-badge online" style="text-transform: capitalize;">● ${authUser?.role || '—'}</span></div>
+               <div class="detail-item"><span>Email</span><strong style="color: white;">${authUser?.email || '—'}</strong></div>
+            </div>
+          </div>
+          
+          <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; background: rgba(255,255,255,0.02);">
+            <h4 style="margin-bottom: 20px; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 12px;">Environment Configurations</h4>
+            <div class="detail-grid">
+               <div class="detail-item"><span>Theme</span><strong>Dark (Premium)</strong></div>
+               <div class="detail-item"><span>SQL Server DB</span><strong class="mono" style="color: #60a5fa;">HUMAN_2025</strong></div>
+               <div class="detail-item"><span>MySQL DB</span><strong class="mono" style="color: #fbbf24;">PAYROLL_2026</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ── Event Listeners ─────────────────────────────────────────────
 function attachEventListeners(): void {
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -922,7 +869,8 @@ function attachEventListeners(): void {
 
   document.getElementById('btn-refresh')?.addEventListener('click', () => { loadAllData(); });
   document.getElementById('btn-api-docs')?.addEventListener('click', () => {
-    window.open('http://localhost:8000/docs', '_blank');
+    currentView = 'api_explorer';
+    render();
   });
 
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
