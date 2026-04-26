@@ -793,6 +793,69 @@ body::before {
   font-weight: 400;
 }
 
+/* ── Auth Tabs ─────────────────────────────────────────────────── */
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.02em;
+}
+
+.auth-tab:hover {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.03);
+}
+
+.auth-tab.active {
+  background: var(--accent-glow);
+  color: var(--accent-hover);
+  border-color: var(--accent-border);
+  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+}
+
+/* ── Auth Success Message ──────────────────────────────────────── */
+.auth-success {
+  background: var(--success-bg);
+  border: 1px solid rgba(52,211,153,0.2);
+  color: var(--success);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  animation: fadeIn 0.3s ease both;
+}
+
+/* ── Form Hint ─────────────────────────────────────────────────── */
+.form-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;

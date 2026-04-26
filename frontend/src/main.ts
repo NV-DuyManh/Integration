@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────
 import './style.css';
 import { api } from './api.ts';
-import type { SystemStatus, SchemaResponse, LoginResponse } from './api.ts';
+import type { SystemStatus, SchemaResponse, AuthResponse } from './api.ts';
 
 // ── State ───────────────────────────────────────────────────────
 let currentView = 'dashboard';
@@ -14,13 +14,15 @@ let payrollSchema: SchemaResponse | null = null;
 
 // ── Auth State ──────────────────────────────────────────────────
 let authToken: string | null = localStorage.getItem('auth_token');
-let authUser: { username: string; role: string } | null = null;
-let loginError: string | null = null;
-let loginLoading = false;
+let authUser: { username: string; role: string; email: string } | null = null;
+let authTab: 'login' | 'register' = 'login';
+let authError: string | null = null;
+let authSuccess: string | null = null;
+let authLoading = false;
 
-function saveAuth(data: LoginResponse): void {
+function saveAuth(data: AuthResponse): void {
   authToken = data.token;
-  authUser = { username: data.username, role: data.role };
+  authUser = { username: data.username, role: data.role, email: data.email };
   localStorage.setItem('auth_token', data.token);
   localStorage.setItem('auth_user', JSON.stringify(authUser));
 }
@@ -43,8 +45,8 @@ function render(): void {
   const app = document.querySelector<HTMLDivElement>('#app')!;
 
   if (!authToken || !authUser) {
-    app.innerHTML = renderLoginPage();
-    attachLoginListeners();
+    app.innerHTML = renderAuthPage();
+    attachAuthListeners();
     return;
   }
 
@@ -61,9 +63,9 @@ function render(): void {
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  LOGIN PAGE
+//  AUTH PAGE (Login / Register Tabs)
 // ══════════════════════════════════════════════════════════════════
-function renderLoginPage(): string {
+function renderAuthPage(): string {
   return `
     <div class="login-wrapper">
       <div class="login-bg-orb login-bg-orb-1"></div>
@@ -77,41 +79,15 @@ function renderLoginPage(): string {
           <p class="login-subtitle">HR & Payroll Middleware Dashboard</p>
         </div>
 
-        <form id="login-form" class="login-form" autocomplete="off">
-          ${loginError ? `<div class="login-error" id="login-error"><span>⚠</span> ${loginError}</div>` : ''}
-
-          <div class="form-group">
-            <label class="form-label" for="login-username">Username</label>
-            <div class="input-wrapper">
-              <span class="input-icon">👤</span>
-              <input type="text" id="login-username" class="form-input" placeholder="Enter username" autocomplete="username" required />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="login-password">Password</label>
-            <div class="input-wrapper">
-              <span class="input-icon">🔒</span>
-              <input type="password" id="login-password" class="form-input" placeholder="Enter password" autocomplete="current-password" required />
-            </div>
-          </div>
-
-          <button type="submit" class="login-btn" id="login-submit" ${loginLoading ? 'disabled' : ''}>
-            ${loginLoading ? '<span class="login-spinner"></span> Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div class="login-actions">
-          <a href="#" class="login-action-link" id="link-create-account">
-            <span class="login-action-icon">✨</span>
-            Create account
-          </a>
-          <span class="login-action-divider">·</span>
-          <a href="#" class="login-action-link" id="link-forgot-password">
-            <span class="login-action-icon">🔑</span>
-            Forgot password?
-          </a>
+        <div class="auth-tabs">
+          <button class="auth-tab ${authTab === 'login' ? 'active' : ''}" id="tab-login">Sign In</button>
+          <button class="auth-tab ${authTab === 'register' ? 'active' : ''}" id="tab-register">Create Account</button>
         </div>
+
+        ${authError ? `<div class="login-error" id="auth-error"><span>⚠</span> ${authError}</div>` : ''}
+        ${authSuccess ? `<div class="auth-success" id="auth-success"><span>✓</span> ${authSuccess}</div>` : ''}
+
+        ${authTab === 'login' ? renderLoginForm() : renderRegisterForm()}
 
         <div class="login-trust-note">
           <span class="trust-icon">🔒</span>
@@ -122,43 +98,194 @@ function renderLoginPage(): string {
   `;
 }
 
-function attachLoginListeners(): void {
-  const form = document.getElementById('login-form');
+function renderLoginForm(): string {
+  return `
+    <form id="auth-form" class="login-form" autocomplete="off">
+      <div class="form-group">
+        <label class="form-label" for="login-username">Username</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="login-username" class="form-input" placeholder="Enter username" autocomplete="username" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-password" class="form-input" placeholder="Enter password" autocomplete="current-password" required />
+        </div>
+      </div>
+
+      <button type="submit" class="login-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
+        ${authLoading ? '<span class="login-spinner"></span> Signing in...' : 'Sign In'}
+      </button>
+
+      <div class="login-actions">
+        <a href="#" class="login-action-link" id="link-forgot-password">
+          <span class="login-action-icon">🔑</span>
+          Forgot password?
+        </a>
+      </div>
+    </form>
+  `;
+}
+
+function renderRegisterForm(): string {
+  return `
+    <form id="auth-form" class="login-form" autocomplete="off">
+      <div class="form-group">
+        <label class="form-label" for="reg-username">Username</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="reg-username" class="form-input" placeholder="Choose a username" autocomplete="username" required minlength="3" maxlength="32" />
+        </div>
+        <span class="form-hint">3–32 characters, letters, numbers, underscores</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-email">Email</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="reg-email" class="form-input" placeholder="your@email.com" autocomplete="email" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-password" class="form-input" placeholder="Min 6 characters" autocomplete="new-password" required minlength="6" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-confirm">Confirm Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-confirm" class="form-input" placeholder="Repeat password" autocomplete="new-password" required />
+        </div>
+      </div>
+
+      <button type="submit" class="login-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
+        ${authLoading ? '<span class="login-spinner"></span> Creating account...' : 'Create Account'}
+      </button>
+    </form>
+  `;
+}
+
+function attachAuthListeners(): void {
+  // Tab switching
+  document.getElementById('tab-login')?.addEventListener('click', () => {
+    authTab = 'login'; authError = null; authSuccess = null; render();
+  });
+  document.getElementById('tab-register')?.addEventListener('click', () => {
+    authTab = 'register'; authError = null; authSuccess = null; render();
+  });
+
+  // Form submit
+  const form = document.getElementById('auth-form');
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const usernameEl = document.getElementById('login-username') as HTMLInputElement;
-    const passwordEl = document.getElementById('login-password') as HTMLInputElement;
-    const username = usernameEl?.value.trim();
-    const password = passwordEl?.value;
-
-    if (!username || !password) {
-      loginError = 'Please enter both username and password';
-      render();
-      return;
+    if (authTab === 'login') {
+      await handleLogin();
+    } else {
+      await handleRegister();
     }
+  });
 
-    loginLoading = true;
-    loginError = null;
+  // Forgot password
+  document.getElementById('link-forgot-password')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    authError = null;
+    authSuccess = 'Password reset is not available in this version. Please contact an administrator.';
     render();
-
-    const result = await api.login({ username, password });
-    loginLoading = false;
-
-    if (result.error) {
-      loginError = result.error.includes('401') ? 'Invalid username or password' : 'Connection failed. Is the backend running?';
-      render();
-      return;
-    }
-
-    if (result.data) {
-      saveAuth(result.data);
-      loginError = null;
-      render();
-      loadAllData();
-    }
   });
 }
 
+async function handleLogin(): Promise<void> {
+  const username = (document.getElementById('login-username') as HTMLInputElement)?.value.trim();
+  const password = (document.getElementById('login-password') as HTMLInputElement)?.value;
+
+  if (!username || !password) {
+    authError = 'Please enter both username and password';
+    render(); return;
+  }
+
+  authLoading = true; authError = null; authSuccess = null; render();
+
+  const result = await api.login({ username, password });
+  authLoading = false;
+
+  if (result.error) {
+    authError = result.error.includes('401') ? 'Invalid username or password' : 'Connection failed. Is the backend running?';
+    render(); return;
+  }
+
+  if (result.data) {
+    saveAuth(result.data);
+    authError = null; authSuccess = null;
+    render(); loadAllData();
+  }
+}
+
+async function handleRegister(): Promise<void> {
+  const username = (document.getElementById('reg-username') as HTMLInputElement)?.value.trim();
+  const email = (document.getElementById('reg-email') as HTMLInputElement)?.value.trim();
+  const password = (document.getElementById('reg-password') as HTMLInputElement)?.value;
+  const confirm = (document.getElementById('reg-confirm') as HTMLInputElement)?.value;
+
+  // Client-side validation
+  if (!username || !email || !password || !confirm) {
+    authError = 'Please fill in all fields'; render(); return;
+  }
+  if (username.length < 3) {
+    authError = 'Username must be at least 3 characters'; render(); return;
+  }
+  if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
+    authError = 'Username can only contain letters, numbers, underscores, dots, hyphens'; render(); return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    authError = 'Please enter a valid email address'; render(); return;
+  }
+  if (password.length < 6) {
+    authError = 'Password must be at least 6 characters'; render(); return;
+  }
+  if (password !== confirm) {
+    authError = 'Passwords do not match'; render(); return;
+  }
+
+  authLoading = true; authError = null; authSuccess = null; render();
+
+  const result = await api.register({ username, email, password, confirm_password: confirm });
+  authLoading = false;
+
+  if (result.error) {
+    // Extract meaningful error
+    if (result.error.includes('409')) {
+      authError = result.error.includes('email') ? 'Email already registered' :
+                  result.error.includes('Username') ? 'Username already exists' :
+                  'Account already exists';
+    } else if (result.error.includes('400')) {
+      authError = 'Passwords do not match';
+    } else if (result.error.includes('422')) {
+      authError = 'Please check your input and try again';
+    } else {
+      authError = 'Connection failed. Is the backend running?';
+    }
+    render(); return;
+  }
+
+  if (result.data) {
+    saveAuth(result.data);
+    authError = null; authSuccess = null;
+    render(); loadAllData();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SIDEBAR
+// ══════════════════════════════════════════════════════════════════
 function renderSidebar(): string {
   const sqlStatus = dbStatus?.sqlserver.connected;
   const mysqlStatus = dbStatus?.mysql.connected;
@@ -277,18 +404,13 @@ function renderDashboard(): string {
   const sqlConnected = dbStatus?.sqlserver.connected;
   const mysqlConnected = dbStatus?.mysql.connected;
 
-  // Calculate total rows
   let hrTotalRows = 0;
   let payrollTotalRows = 0;
   if (hrSchema?.tables) {
-    for (const t of Object.values(hrSchema.tables)) {
-      hrTotalRows += t.row_count || 0;
-    }
+    for (const t of Object.values(hrSchema.tables)) { hrTotalRows += t.row_count || 0; }
   }
   if (payrollSchema?.tables) {
-    for (const t of Object.values(payrollSchema.tables)) {
-      payrollTotalRows += t.row_count || 0;
-    }
+    for (const t of Object.values(payrollSchema.tables)) { payrollTotalRows += t.row_count || 0; }
   }
 
   const totalTables = (hrSchema?.table_count ?? 0) + (payrollSchema?.table_count ?? 0);
@@ -307,7 +429,6 @@ function renderDashboard(): string {
         </div>
         <div class="stat-change positive">HUMAN_2025</div>
       </div>
-
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">MySQL</span>
@@ -320,7 +441,6 @@ function renderDashboard(): string {
         </div>
         <div class="stat-change positive">PAYROLL_2026</div>
       </div>
-
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">Total Tables</span>
@@ -329,7 +449,6 @@ function renderDashboard(): string {
         <div class="stat-value">${totalTables || '—'}</div>
         <div class="stat-change positive">${hrTableCount} HR · ${payrollTableCount} Payroll</div>
       </div>
-
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-label">Total Records</span>
@@ -339,7 +458,6 @@ function renderDashboard(): string {
         <div class="stat-change positive">${hrTotalRows.toLocaleString()} HR · ${payrollTotalRows.toLocaleString()} Payroll</div>
       </div>
     </div>
-
     <div class="content-grid">
       ${renderSchemaCard('HUMAN_2025', 'sql-server', hrSchema)}
       ${renderSchemaCard('PAYROLL_2026', 'mysql', payrollSchema)}
@@ -403,12 +521,8 @@ function renderSchemaView(db: 'hr' | 'payroll'): string {
   if (!schema) {
     return `
       <div class="card">
-        <div class="card-header">
-          <h3>Loading ${title} schema...</h3>
-        </div>
-        <div class="card-body">
-          <div class="loading-skeleton" style="height: 200px;"></div>
-        </div>
+        <div class="card-header"><h3>Loading ${title} schema...</h3></div>
+        <div class="card-body"><div class="loading-skeleton" style="height: 200px;"></div></div>
       </div>
     `;
   }
@@ -431,13 +545,7 @@ function renderSchemaView(db: 'hr' | 'payroll'): string {
         </div>
         <div class="card-body" style="padding: 0;">
           <table class="data-table">
-            <thead>
-              <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Nullable</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Column</th><th>Type</th><th>Nullable</th></tr></thead>
             <tbody>${colRows}</tbody>
           </table>
         </div>
@@ -469,18 +577,12 @@ function renderSyncView(): string {
         </div>
         <div class="stats-grid" style="margin-bottom: 0; grid-template-columns: repeat(2, 1fr);">
           <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-label">HR Tables</span>
-              <span class="stat-icon">🗄️</span>
-            </div>
+            <div class="stat-header"><span class="stat-label">HR Tables</span><span class="stat-icon">🗄️</span></div>
             <div class="stat-value">${hrSchema?.table_count ?? '—'}</div>
             <div class="stat-change positive">HUMAN_2025</div>
           </div>
           <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-label">Payroll Tables</span>
-              <span class="stat-icon">🐬</span>
-            </div>
+            <div class="stat-header"><span class="stat-label">Payroll Tables</span><span class="stat-icon">🐬</span></div>
             <div class="stat-value">${payrollSchema?.table_count ?? '—'}</div>
             <div class="stat-change positive">PAYROLL_2026</div>
           </div>
@@ -526,72 +628,47 @@ function renderActivityView(): string {
 
 // ── Event Listeners ─────────────────────────────────────────────
 function attachEventListeners(): void {
-  // Nav items
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       const view = (item as HTMLElement).dataset.view;
-      if (view) {
-        currentView = view;
-        render();
-      }
+      if (view) { currentView = view; render(); }
     });
   });
 
-  // Refresh button
-  document.getElementById('btn-refresh')?.addEventListener('click', () => {
-    loadAllData();
-  });
-
-  // API Docs button
+  document.getElementById('btn-refresh')?.addEventListener('click', () => { loadAllData(); });
   document.getElementById('btn-api-docs')?.addEventListener('click', () => {
     window.open('http://localhost:8000/docs', '_blank');
   });
 
-  // Logout button
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
-    if (authToken) {
-      await api.logout(authToken);
-    }
+    if (authToken) { await api.logout(authToken); }
     clearAuth();
-    dbStatus = null;
-    hrSchema = null;
-    payrollSchema = null;
-    currentView = 'dashboard';
+    dbStatus = null; hrSchema = null; payrollSchema = null;
+    currentView = 'dashboard'; authTab = 'login';
     render();
   });
 }
 
 // ── Data Loading ────────────────────────────────────────────────
 async function loadAllData(): Promise<void> {
-  // Load in parallel
   const [statusResult, hrResult, payrollResult] = await Promise.all([
-    api.dashboardStatus(),
-    api.hrSchema(),
-    api.payrollSchema(),
+    api.dashboardStatus(), api.hrSchema(), api.payrollSchema(),
   ]);
-
   if (statusResult.data) dbStatus = statusResult.data;
   if (hrResult.data) hrSchema = hrResult.data;
   if (payrollResult.data) payrollSchema = payrollResult.data;
-
   render();
 }
 
 // ── Initialize ──────────────────────────────────────────────────
 async function initApp(): Promise<void> {
-  // If we have a stored token, validate it
   if (authToken) {
     const result = await api.me(authToken);
-    if (result.error) {
-      clearAuth();
-      render();
-      return;
-    }
+    if (result.error) { clearAuth(); render(); return; }
     if (result.data) {
-      authUser = { username: result.data.username, role: result.data.role };
+      authUser = { username: result.data.username, role: result.data.role, email: result.data.email };
     }
-    render();
-    loadAllData();
+    render(); loadAllData();
   } else {
     render();
   }
