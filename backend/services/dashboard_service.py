@@ -155,4 +155,28 @@ class DashboardService:
                 "data": recon["missing_in_payroll"] + recon["missing_in_hr"]
             }
             
+        elif report_type == "department":
+            hr_emps = self.hr.repo.get_all_employees()
+            dept_totals = {}
+            for e in hr_emps:
+                dept = e.get("DepartmentName") or "Unknown"
+                if dept not in dept_totals:
+                    dept_totals[dept] = {"Employees": 0, "TotalBaseSalary": 0, "TotalNetSalary": 0}
+                
+                dept_totals[dept]["Employees"] += 1
+                p = self.payroll.repo.get_employee_payroll(e["EmployeeID"])
+                if p:
+                    dept_totals[dept]["TotalBaseSalary"] += p.get("BaseSalary", 0)
+                    dept_totals[dept]["TotalNetSalary"] += p.get("NetSalary", 0)
+            
+            report_data = []
+            for d, stats in dept_totals.items():
+                report_data.append({
+                    "Department": d,
+                    "Employee Count": stats["Employees"],
+                    "Total Base Salary": f"${stats['TotalBaseSalary']:,}",
+                    "Total Net Salary": f"${stats['TotalNetSalary']:,}"
+                })
+            return {"title": "Department Payroll Report", "data": report_data}
+            
         return {"title": "Unknown Report", "data": []}
