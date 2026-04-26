@@ -3,7 +3,7 @@
 //  API client for the FastAPI backend
 // ─────────────────────────────────────────────────────────────────
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
 
 interface ApiResponse<T = unknown> {
   data: T | null;

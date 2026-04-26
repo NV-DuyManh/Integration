@@ -92,13 +92,16 @@ def _resolve_port(preferred: int, fallback: int) -> int:
 
 
 if __name__ == "__main__":
-    port = _resolve_port(preferred=8000, fallback=8001)
+    port = settings.PORT
     logger.info("🚀 Starting server on port %d", port)
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
         port=port,
         reload=settings.DEBUG,
-        # Prevent WatchFiles reloader from triggering on .pyc / __pycache__
-        reload_excludes=["**/__pycache__/**", "**/*.pyc", "**/venv/**", "**/.pytest_cache/**"],
+        # Prevent WatchFiles reloader from triggering on .pyc / __pycache__ / SQLite
+        reload_excludes=[
+            "**/__pycache__/**", "**/*.pyc", "**/venv/**", "**/.pytest_cache/**",
+            "**/*.db", "**/*.db-wal", "**/*.db-shm", "**/*.db-journal",
+        ],
     )
