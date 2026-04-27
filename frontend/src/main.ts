@@ -3,8 +3,12 @@
 //  HR & Payroll Middleware Dashboard — Main Entry
 // ─────────────────────────────────────────────────────────────────
 import './style.css';
+import './auth-theme.css';
 import { api } from './api.ts';
 import type { SystemStatus, SchemaResponse, AuthResponse } from './api.ts';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // ── State ───────────────────────────────────────────────────────
 let currentView = 'employee360';
@@ -28,6 +32,10 @@ let apiExplorerLoading = false;
 
 // Global Search state
 
+// Report state
+let reportSearchQuery = '';
+let reportSortColumn: string | null = null;
+let reportSortDir: 'asc' | 'desc' = 'asc';
 
 // ── Icons ───────────────────────────────────────────────────────
 const ICONS = {
@@ -87,7 +95,7 @@ function applyTheme(theme: string) {
 applyTheme(currentTheme);
 
 // ── Export Utilities ────────────────────────────────────────────
-(window as any).exportToCSV = function (btnElement: HTMLElement) {
+(window as any).exportToExcel = function (btnElement: HTMLElement) {
   if (!reportData || !reportData.data || reportData.data.length === 0) return;
   const originalText = btnElement.innerHTML;
   btnElement.innerHTML = `<span style="margin-right:8px; animation: spin 1s linear infinite;">↻</span> Compiling...`;
@@ -96,23 +104,21 @@ applyTheme(currentTheme);
 
   setTimeout(() => {
     const data = reportData.data;
-    const headers = Object.keys(data[0]);
-    const csvContent = [
-      headers.join(','),
-      ...data.map((row: any) => headers.map(h => {
-        let val = row[h] !== null ? String(row[h]) : '';
-        val = val.replace(/"/g, '""');
-        return `"${val}"`;
-      }).join(','))
-    ].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${reportData.title.replace(/\s+/g, '_').toLowerCase()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    
+    XLSX.utils.decode_range(worksheet['!ref'] || "A1:A1");
+    worksheet['!autofilter'] = { ref: worksheet['!ref']! };
+    
+    const colWidths = Object.keys(data[0]).map(k => ({ wch: Math.max(k.length + 5, 15) }));
+    worksheet['!cols'] = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report Data');
+    
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const filename = `Employee_Compensation_Report_${dateStr}.xlsx`;
+    
+    XLSX.writeFile(workbook, filename, { bookType: 'xlsx', compression: true });
 
     btnElement.innerHTML = `<span style="margin-right:8px; color: var(--success);">✓</span> Exported`;
     setTimeout(() => {
@@ -120,24 +126,166 @@ applyTheme(currentTheme);
       btnElement.style.pointerEvents = 'auto';
       btnElement.style.opacity = '1';
     }, 2000);
-  }, 800);
+  }, 500);
 };
 
-(window as any).simulateExport = function (btnElement: HTMLElement) {
+(window as any).exportToPDF = async function (btnElement: HTMLElement) {
+  if (!reportData || !reportData.data || reportData.data.length === 0) return;
   const originalText = btnElement.innerHTML;
   btnElement.innerHTML = `<span style="margin-right:8px; animation: spin 1s linear infinite;">↻</span> Generating...`;
   btnElement.style.pointerEvents = 'none';
   btnElement.style.opacity = '0.8';
 
-  setTimeout(() => {
+  try {
+    const doc = new jsPDF('landscape');
+    
+    // Embed Roboto fonts for Vietnamese Unicode support
+    const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    };
+
+    const [regRes, boldRes] = await Promise.all([
+      fetch('/Roboto-Regular.ttf'),
+      fetch('/Roboto-Bold.ttf')
+    ]);
+    
+    if (regRes.ok && boldRes.ok) {
+      const regBuf = await regRes.arrayBuffer();
+      const boldBuf = await boldRes.arrayBuffer();
+      doc.addFileToVFS('Roboto-Regular.ttf', arrayBufferToBase64(regBuf));
+      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+      doc.addFileToVFS('Roboto-Bold.ttf', arrayBufferToBase64(boldBuf));
+      doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+      doc.setFont('Roboto');
+    }
+
+    const data = reportData.data;
+    const headers = Object.keys(data[0]);
+    // Normalize strings to prevent mojibake/double encoding
+    const rows = data.map((row: any) => headers.map(h => row[h] !== null && row[h] !== undefined ? String(row[h]).normalize('NFC') : '—'));
+
+    // Design: Executive Header
+    doc.setFillColor(30, 41, 59); // Dark blue header bg
+    doc.rect(0, 0, 297, 40, 'F');
+    
+    // Logo / Branding
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('Roboto', 'bold');
+    doc.text('NexusBridge', 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setFont('Roboto', 'normal');
+    doc.setTextColor(148, 163, 184);
+    doc.text('HR & PAYROLL MIDDLEWARE PLATFORM', 14, 30);
+
+    // Report Title & Meta
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(18);
+    doc.setFont('Roboto', 'bold');
+    doc.text(String(reportData.title).normalize('NFC'), 14, 55);
+    
+    doc.setFontSize(10);
+    doc.setFont('Roboto', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 62);
+    
+    // Summary Cards
+    doc.setFillColor(241, 245, 249);
+    doc.rect(14, 68, 60, 20, 'F');
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(9);
+    doc.text('TOTAL RECORDS', 18, 76);
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(14);
+    doc.setFont('Roboto', 'bold');
+    doc.text(String(data.length), 18, 83);
+
+    // Table
+    autoTable(doc, {
+      startY: 95,
+      head: [headers],
+      body: rows,
+      theme: 'grid',
+      styles: { font: 'Roboto', fontStyle: 'normal', fontSize: 9, cellPadding: 4, textColor: [51, 65, 85] },
+      headStyles: { font: 'Roboto', fontStyle: 'bold', fillColor: [79, 70, 229], textColor: 255 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      didParseCell: function(data) {
+        if (data.section === 'body' && data.column.index > 0) {
+           const headerText = headers[data.column.index].toLowerCase();
+           if (headerText.includes('salary') || headerText.includes('bonus') || headerText.includes('deduction') || !isNaN(Number(data.cell.raw))) {
+              data.cell.styles.halign = 'right';
+              const num = Number(data.cell.raw);
+              if (!isNaN(num) && (headerText.includes('salary') || headerText.includes('bonus') || headerText.includes('deduction'))) {
+                 data.cell.text = ['₫ ' + num.toLocaleString()];
+              }
+           }
+        }
+      },
+      didDrawPage: function (data) {
+        doc.setFontSize(8);
+        doc.setFont('Roboto', 'normal');
+        doc.setTextColor(148, 163, 184);
+        doc.text(
+          'NexusBridge Enterprise Reporting • Page ' + (doc as any).internal.getNumberOfPages(),
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    doc.save(`NexusBridge_Report_${dateStr}.pdf`);
+
     btnElement.innerHTML = `<span style="margin-right:8px; color: var(--success);">✓</span> Downloaded`;
+  } catch (error) {
+    console.error("PDF Export error:", error);
+    btnElement.innerHTML = `<span style="margin-right:8px; color: var(--danger);">✗</span> Failed`;
+  } finally {
     setTimeout(() => {
       btnElement.innerHTML = originalText;
       btnElement.style.pointerEvents = 'auto';
       btnElement.style.opacity = '1';
     }, 2000);
-  }, 1200);
+  }
 };
+
+(window as any).sortReport = function(column: string) {
+  if (reportSortColumn === column) {
+    reportSortDir = reportSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    reportSortColumn = column;
+    reportSortDir = 'asc';
+  }
+  const pageContent = document.querySelector('.page-content');
+  if (pageContent) {
+    pageContent.innerHTML = renderPage();
+    (window as any)._attachReportListeners();
+  }
+};
+
+(window as any).searchReport = function(query: string) {
+  reportSearchQuery = query.toLowerCase();
+  const pageContent = document.querySelector('.page-content');
+  if (pageContent) {
+    pageContent.innerHTML = renderPage();
+    (window as any)._attachReportListeners();
+    // Maintain focus
+    setTimeout(() => {
+       const input = document.getElementById('report-search-input') as HTMLInputElement;
+       if (input) {
+         input.focus();
+         input.setSelectionRange(input.value.length, input.value.length);
+       }
+    }, 0);
+  }
+};
+
 
 
 // ── Render ──────────────────────────────────────────────────────
@@ -145,10 +293,13 @@ function render(): void {
   const app = document.querySelector<HTMLDivElement>('#app')!;
 
   if (!authToken || !authUser) {
+    document.body.classList.add('auth-mode');
     app.innerHTML = renderAuthPage();
     attachAuthListeners();
     return;
   }
+  
+  document.body.classList.remove('auth-mode');
 
   app.innerHTML = `
     ${renderSidebar()}
@@ -167,108 +318,148 @@ function render(): void {
 // ══════════════════════════════════════════════════════════════════
 function renderAuthPage(): string {
   return `
-    <div class="login-wrapper">
-      <div class="login-bg-orb login-bg-orb-1"></div>
-      <div class="login-bg-orb login-bg-orb-2"></div>
-      <div class="login-bg-orb login-bg-orb-3"></div>
-
-      <div class="login-card">
-        <div class="login-header">
-          <div class="login-brand-icon">${ICONS.bolt}</div>
-          <h1 class="login-title">NexusBridge</h1>
-          <p class="login-subtitle">HR & Payroll Middleware Dashboard</p>
+    <div class="auth-split-layout">
+      
+      <!-- LEFT HERO SECTION -->
+      <div class="auth-hero">
+        <div class="auth-hero-bg">
+           <div class="auth-hero-orb auth-hero-orb-1"></div>
+           <div class="auth-hero-orb auth-hero-orb-2"></div>
         </div>
-
-        <div class="auth-tabs">
-          <button class="auth-tab ${authTab === 'login' ? 'active' : ''}" id="tab-login">Sign In</button>
-          <button class="auth-tab ${authTab === 'register' ? 'active' : ''}" id="tab-register">Create Account</button>
-        </div>
-
-        ${authError ? `<div class="login-error" id="auth-error"><span>⚠</span> ${authError}</div>` : ''}
-        ${authSuccess ? `<div class="auth-success" id="auth-success"><span>✓</span> ${authSuccess}</div>` : ''}
-
-        ${authTab === 'login' ? renderLoginForm() : renderRegisterForm()}
-
-        <div class="login-trust-note">
-          <span class="trust-icon">🔒</span>
-          <span>Secured with encrypted authentication. Your credentials are never stored in plain text.</span>
+        
+        <div class="auth-hero-content">
+          <div class="auth-hero-logo">${ICONS.bolt} NexusBridge</div>
+          <h1 class="auth-hero-title">Unified HR & Payroll Intelligence</h1>
+          <p class="auth-hero-subtitle">Connect HR and Payroll data into one intelligent workspace.</p>
+          
+          <div class="auth-hero-features">
+            <div class="auth-feature">
+              <span class="auth-feature-icon">${ICONS.user}</span>
+              <span class="auth-feature-text">Employee 360 Analytics</span>
+            </div>
+            <div class="auth-feature">
+              <span class="auth-feature-icon">${ICONS.database}</span>
+              <span class="auth-feature-text">Reconciliation Intelligence</span>
+            </div>
+            <div class="auth-feature">
+              <span class="auth-feature-icon">${ICONS.reports}</span>
+              <span class="auth-feature-text">Executive Reporting</span>
+            </div>
+          </div>
+          
+          <div class="auth-hero-badges">
+            <span class="auth-badge">SQL Server</span>
+            <span class="auth-badge">MySQL</span>
+            <span class="auth-badge">Secure Auth</span>
+          </div>
         </div>
       </div>
+
+      <!-- RIGHT AUTH PANEL -->
+      <div class="auth-panel">
+        <div class="auth-card">
+          <div class="auth-header">
+            <h2 class="auth-title">Welcome back</h2>
+            <p class="auth-subtitle">Sign in to your account to continue</p>
+          </div>
+
+          <div class="auth-tabs">
+            <button class="auth-tab ${authTab === 'login' ? 'active' : ''}" id="tab-login">Sign In</button>
+            <button class="auth-tab ${authTab === 'register' ? 'active' : ''}" id="tab-register">Create Account</button>
+          </div>
+
+          ${authError ? `<div class="auth-alert error"><span>⚠</span> ${authError}</div>` : ''}
+          ${authSuccess ? `<div class="auth-alert success"><span>✓</span> ${authSuccess}</div>` : ''}
+
+          ${authTab === 'login' ? renderLoginForm() : renderRegisterForm()}
+        </div>
+      </div>
+
     </div>
   `;
 }
 
 function renderLoginForm(): string {
   return `
-    <form id="auth-form" class="login-form" autocomplete="off">
-      <div class="form-group">
-        <label class="form-label" for="login-username">Username</label>
-        <div class="input-wrapper">
-          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.user}</span>
-          <input type="text" id="login-username" class="form-input" placeholder="Enter username" autocomplete="username" required />
+    <form id="auth-form" class="auth-form" autocomplete="off">
+      <div class="auth-group">
+        <label class="auth-label" for="login-username">Username</label>
+        <div class="auth-input-wrap">
+          <input type="text" id="login-username" class="auth-input" placeholder="Enter username" autocomplete="username" required />
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="login-password">Password</label>
-        <div class="input-wrapper">
-          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.lock}</span>
-          <input type="password" id="login-password" class="form-input" placeholder="Enter password" autocomplete="current-password" required />
+      <div class="auth-group">
+        <div class="auth-label-row">
+          <label class="auth-label" for="login-password">Password</label>
+          <a href="#" class="auth-link-small" id="link-forgot-password">Forgot password?</a>
+        </div>
+        <div class="auth-input-wrap">
+          <input type="password" id="login-password" class="auth-input" placeholder="Enter password" autocomplete="current-password" required />
+          <button type="button" class="auth-toggle-pwd" tabindex="-1">👁</button>
         </div>
       </div>
 
-      <button type="submit" class="login-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
-        ${authLoading ? '<span class="login-spinner"></span> Signing in...' : 'Sign In'}
+      <div class="auth-options">
+        <label class="auth-checkbox">
+          <input type="checkbox" id="login-remember" />
+          <span>Remember me for 30 days</span>
+        </label>
+      </div>
+
+      <button type="submit" class="auth-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
+        ${authLoading ? '<span class="auth-spinner"></span>' : ''} ${authLoading ? 'Signing in...' : 'Sign in'}
       </button>
-
-      <div class="login-actions">
-        <a href="#" class="login-action-link" id="link-forgot-password">
-          Forgot password?
-        </a>
-      </div>
     </form>
   `;
 }
 
 function renderRegisterForm(): string {
   return `
-    <form id="auth-form" class="login-form" autocomplete="off">
-      <div class="form-group">
-        <label class="form-label" for="reg-username">Username</label>
-        <div class="input-wrapper">
-          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.user}</span>
-          <input type="text" id="reg-username" class="form-input" placeholder="Choose a username" autocomplete="username" required minlength="3" maxlength="32" />
-        </div>
-        <span class="form-hint">3–32 characters, letters, numbers, underscores</span>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="reg-email">Email</label>
-        <div class="input-wrapper">
-          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.mail}</span>
-          <input type="email" id="reg-email" class="form-input" placeholder="your@email.com" autocomplete="email" required />
+    <form id="auth-form" class="auth-form" autocomplete="off">
+      <div class="auth-group">
+        <label class="auth-label" for="reg-username">Username</label>
+        <div class="auth-input-wrap">
+          <input type="text" id="reg-username" class="auth-input" placeholder="Choose a username" autocomplete="username" required minlength="3" maxlength="32" />
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="reg-password">Password</label>
-        <div class="input-wrapper">
-          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.lock}</span>
-          <input type="password" id="reg-password" class="form-input" placeholder="Min 6 characters" autocomplete="new-password" required minlength="6" />
+      <div class="auth-group">
+        <label class="auth-label" for="reg-email">Work Email</label>
+        <div class="auth-input-wrap">
+          <input type="email" id="reg-email" class="auth-input" placeholder="name@company.com" autocomplete="email" required />
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="reg-confirm">Confirm Password</label>
-        <div class="input-wrapper">
-          <span class="input-icon" style="width: 14px; height: 14px;">${ICONS.lock}</span>
-          <input type="password" id="reg-confirm" class="form-input" placeholder="Repeat password" autocomplete="new-password" required />
+      <div class="auth-group">
+        <label class="auth-label" for="reg-password">Password</label>
+        <div class="auth-input-wrap">
+          <input type="password" id="reg-password" class="auth-input" placeholder="Create a password" autocomplete="new-password" required minlength="6" />
+          <button type="button" class="auth-toggle-pwd" tabindex="-1">👁</button>
+        </div>
+        <div class="auth-strength">
+           <div class="auth-strength-bar" id="str-1"></div>
+           <div class="auth-strength-bar" id="str-2"></div>
+           <div class="auth-strength-bar" id="str-3"></div>
+           <div class="auth-strength-bar" id="str-4"></div>
+        </div>
+        <div class="auth-strength-text" id="str-text">Password strength</div>
+      </div>
+
+      <div class="auth-group">
+        <label class="auth-label" for="reg-confirm">Confirm Password</label>
+        <div class="auth-input-wrap">
+          <input type="password" id="reg-confirm" class="auth-input" placeholder="Repeat password" autocomplete="new-password" required minlength="6" />
         </div>
       </div>
 
-      <button type="submit" class="login-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
-        ${authLoading ? '<span class="login-spinner"></span> Creating account...' : 'Create Account'}
+      <button type="submit" class="auth-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
+        ${authLoading ? '<span class="auth-spinner"></span>' : ''} ${authLoading ? 'Creating account...' : 'Create Account'}
       </button>
+
+      <p class="auth-terms">
+        By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </p>
     </form>
   `;
 }
@@ -297,9 +488,59 @@ function attachAuthListeners(): void {
   document.getElementById('link-forgot-password')?.addEventListener('click', (e) => {
     e.preventDefault();
     authError = null;
-    authSuccess = 'Password reset is not available in this version. Please contact an administrator.';
+    authSuccess = 'Password reset instructions have been sent to your email (Simulated).';
     render();
   });
+
+  // Toggle password visibility
+  document.querySelectorAll('.auth-toggle-pwd').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const input = (e.currentTarget as HTMLElement).previousElementSibling as HTMLInputElement;
+      if (input && input.tagName === 'INPUT') {
+        if (input.type === 'password') {
+          input.type = 'text';
+          (e.currentTarget as HTMLElement).textContent = '🙈';
+        } else {
+          input.type = 'password';
+          (e.currentTarget as HTMLElement).textContent = '👁';
+        }
+      }
+    });
+  });
+
+  // Password strength indicator
+  const pwdInput = document.getElementById('reg-password') as HTMLInputElement;
+  if (pwdInput) {
+    pwdInput.addEventListener('input', (e) => {
+      const val = (e.target as HTMLInputElement).value;
+      let strength = 0;
+      if (val.length >= 6) strength++;
+      if (val.match(/[A-Z]/)) strength++;
+      if (val.match(/[0-9]/)) strength++;
+      if (val.match(/[^a-zA-Z0-9]/)) strength++;
+
+      const bars = [
+        document.getElementById('str-1'),
+        document.getElementById('str-2'),
+        document.getElementById('str-3'),
+        document.getElementById('str-4')
+      ];
+      const strText = document.getElementById('str-text');
+      
+      const colors = ['#ef4444', '#f59e0b', '#22c55e', '#10b981'];
+      const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+
+      bars.forEach((bar, i) => {
+        if (bar) {
+          bar.style.background = i < strength ? colors[i] : '#e2e8f0';
+        }
+      });
+      if (strText) {
+        strText.textContent = val.length === 0 ? 'Password strength' : labels[Math.max(0, strength-1)];
+        strText.style.color = val.length === 0 ? 'var(--auth-text-muted)' : colors[Math.max(0, strength-1)];
+      }
+    });
+  }
 }
 
 async function handleLogin(): Promise<void> {
@@ -338,6 +579,9 @@ async function handleRegister(): Promise<void> {
   if (!username || !email || !password || !confirm) {
     authError = 'Please fill in all fields'; render(); return;
   }
+  if (password !== confirm) {
+    authError = 'Passwords do not match'; render(); return;
+  }
   if (username.length < 3) {
     authError = 'Username must be at least 3 characters'; render(); return;
   }
@@ -349,9 +593,6 @@ async function handleRegister(): Promise<void> {
   }
   if (password.length < 6) {
     authError = 'Password must be at least 6 characters'; render(); return;
-  }
-  if (password !== confirm) {
-    authError = 'Passwords do not match'; render(); return;
   }
 
   authLoading = true; authError = null; authSuccess = null; render();
@@ -377,8 +618,14 @@ async function handleRegister(): Promise<void> {
 
   if (result.data) {
     saveAuth(result.data);
-    authError = null; authSuccess = null;
-    render(); loadAllData();
+    authError = null; 
+    authSuccess = 'Account created successfully! Loading dashboard...';
+    render(); 
+    
+    // Short delay so user can see the success message
+    setTimeout(() => {
+      loadAllData();
+    }, 1500);
   }
 }
 
@@ -830,66 +1077,101 @@ function renderReports(): string {
     { id: 'exceptions', label: 'Sync Exceptions', desc: 'Discrepancy and anomaly highlights' }
   ];
 
-  const reportDataHtml = reportData ? `
-    <div class="card mt-6 fade-in" style="margin-top: 24px;">
-      <div class="card-header" style="background: var(--gradient-header); border-bottom: 1px solid var(--border-light);">
-        <div>
-          <h3 style="font-size: 20px;">${reportData.title}</h3>
-          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Data snapshot generated on ${new Date().toLocaleDateString()}</p>
+  let reportDataHtml = '';
+  if (reportData && reportData.data) {
+    let displayData = reportData.data;
+    let headers = displayData.length > 0 ? Object.keys(displayData[0]) : [];
+    
+    if (displayData.length > 0) {
+      if (reportSearchQuery) {
+        displayData = displayData.filter((row: any) => 
+          headers.some(h => String(row[h] || '').toLowerCase().includes(reportSearchQuery))
+        );
+      }
+      if (reportSortColumn) {
+        displayData = [...displayData].sort((a: any, b: any) => {
+          const valA = a[reportSortColumn as string];
+          const valB = b[reportSortColumn as string];
+          if (valA < valB) return reportSortDir === 'asc' ? -1 : 1;
+          if (valA > valB) return reportSortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+    }
+
+    reportDataHtml = `
+      <div class="card mt-6 fade-in" style="margin-top: 24px; box-shadow: var(--shadow-lg);">
+        <div class="card-header" style="background: var(--gradient-header); border-bottom: 1px solid var(--border-light); flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h3 style="font-size: 20px;">${reportData.title}</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Generated on ${new Date().toLocaleDateString()} • <strong style="color: var(--text-primary);">${displayData.length}</strong> Records</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+             <button class="primary-btn btn-export-excel" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); transition: transform 0.2s;"><span style="margin-right: 6px;">⬇</span> Export Excel</button>
+             <button class="primary-btn btn-export-pdf" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border: none; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); transition: transform 0.2s;"><span style="margin-right: 6px;">⬇</span> Export PDF</button>
+          </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-           <button class="secondary-btn btn-export-csv" style="border-color: var(--success); color: var(--success);"><span style="margin-right: 4px;">${ICONS.database}</span> Excel Export</button>
-           <button class="secondary-btn btn-export-mock" style="border-color: var(--danger); color: var(--danger);"><span style="margin-right: 4px;">${ICONS.reports}</span> PDF Report</button>
-           <button class="primary-btn btn-export-mock">Executive Summary</button>
-           <button class="secondary-btn btn-export-mock" style="border-color: var(--info); color: var(--info);">Share Report</button>
+        
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-light); background: var(--bg-card-solid); display: flex; justify-content: space-between; align-items: center;">
+          <div class="search-container" style="display: flex; gap: 8px; width: 300px;">
+            <input type="text" id="report-search-input" class="search-input" style="border: 1px solid var(--border); background: var(--bg-primary); padding: 8px 12px; border-radius: var(--radius-sm); width: 100%; font-size: 13px;" placeholder="Search report data..." value="${reportSearchQuery}">
+            <button class="secondary-btn" id="btn-report-search" onclick="window.searchReport(document.getElementById('report-search-input').value)">Search</button>
+          </div>
+        </div>
+
+        <div class="card-body" style="padding:0; overflow: auto; max-height: 600px;">
+          <table class="data-table" style="position: relative; margin: 0; width: 100%;">
+            <thead style="position: sticky; top: 0; z-index: 10; background: var(--bg-card-solid); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              <tr>
+                ${headers.map(h => `
+                  <th style="cursor: pointer; user-select: none; background: var(--bg-card-solid); padding: 12px 16px;" onclick="window.sortReport('${h}')">
+                    ${h} <span style="color: var(--accent);">${reportSortColumn === h ? (reportSortDir === 'asc' ? '↑' : '↓') : ''}</span>
+                  </th>
+                `).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${displayData.length === 0 ? '<tr><td colspan="100%" class="text-center" style="padding: 32px;">No matching data available</td></tr>' :
+        displayData.map((row: any) => `
+                  <tr>
+                    ${headers.map(h => {
+                      const val = row[h];
+                      const isCurrency = String(h).toLowerCase().includes('salary') || String(h).toLowerCase().includes('bonus') || String(h).toLowerCase().includes('deduction');
+                      const isNumber = typeof val === 'number';
+                      
+                      let displayVal = val !== null && val !== undefined ? val : '—';
+                      if (isCurrency && isNumber) {
+                        displayVal = '<span style="color: var(--success); font-weight: 500;">₫' + val.toLocaleString() + '</span>';
+                      } else if (isNumber) {
+                        displayVal = val.toLocaleString();
+                      }
+                      
+                      const align = (isCurrency || isNumber) ? 'right' : 'left';
+                      return `<td style="text-align: ${align}; padding: 12px 16px;">${displayVal}</td>`;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="card-body" style="padding:0; overflow-x: auto;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              ${Object.keys(reportData.data[0] || {}).map(k => `<th>${k}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${reportData.data.length === 0 ? '<tr><td colspan="100%" class="text-center">No data available</td></tr>' :
-      reportData.data.slice(0, 5).map((row: any) => `
-                <tr>
-                  ${Object.values(row).map(v => `<td>${v !== null ? v : '—'}</td>`).join('')}
-                </tr>
-              `).join('')}
-          </tbody>
-        </table>
-        ${reportData.data.length > 5 ? `<div style="text-align: center; padding: 16px; border-top: 1px solid var(--border-light); color: var(--text-muted); font-size: 13px;">Previewing 5 of ${reportData.data.length} records. Download report to view all data.</div>` : ''}
+    `;
+  } else {
+    reportDataHtml = `
+      <div class="content-grid" style="margin-top: 24px;">
+        <div class="card" style="padding: 48px 32px; text-align: center; background: var(--bg-card-solid); border: 1px dashed var(--border-accent); box-shadow: var(--shadow-md);">
+           <div style="width: 64px; height: 64px; background: var(--info-bg); color: var(--info); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:32px;height:32px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+           </div>
+           <h4 style="margin-bottom: 12px; font-size: 18px;">Select an Export Format</h4>
+           <p style="color: var(--text-muted); font-size: 14px; max-width: 400px; margin: 0 auto;">Choose a reporting template above to generate a full preview and access advanced export options for Excel and PDF.</p>
+        </div>
       </div>
-    </div>
-  ` : `
-    <div class="content-grid" style="margin-top: 24px;">
-      <div class="card" style="padding: 32px; text-align: center; background: var(--bg-card-solid); border: 1px dashed var(--border-accent);">
-         <div style="width: 48px; height: 48px; background: var(--info-bg); color: var(--info); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
-         </div>
-         <h4 style="margin-bottom: 8px;">Select an Export Format</h4>
-         <p style="color: var(--text-muted); font-size: 13px;">Choose a template above to generate a preview and access export options.</p>
-      </div>
-      <div class="card" style="padding: 24px; background: var(--bg-card);">
-         <h4 style="margin-bottom: 16px; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">Recent Exports History</h4>
-         <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">
-               <div><strong style="color: var(--text-primary);">Executive_Summary_Q2.pdf</strong><div style="color: var(--text-muted); font-size: 11px;">Today at 10:42 AM</div></div>
-               <span style="color: var(--success); font-weight: 600;">Downloaded</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">
-               <div><strong style="color: var(--text-primary);">Department_Payroll_Extract.xlsx</strong><div style="color: var(--text-muted); font-size: 11px;">Yesterday at 4:15 PM</div></div>
-               <span style="color: var(--success); font-weight: 600;">Downloaded</span>
-            </div>
-         </div>
-      </div>
-    </div>
-  `;
+    `;
+  }
 
   return `
-    <div class="card">
+    <div class="card" style="box-shadow: var(--shadow-md);">
       <div class="card-header" style="background: var(--bg-card-solid); border-bottom: none;">
         <div>
           <h3 style="font-size: 18px;">Analytics & Export Center</h3>
@@ -1101,17 +1383,29 @@ function attachEventListeners(): void {
     });
   });
 
-  document.querySelectorAll('.btn-export-csv').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      (window as any).exportToCSV(e.currentTarget as HTMLElement);
+  (window as any)._attachReportListeners = function() {
+    document.querySelectorAll('.btn-export-excel').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        (window as any).exportToExcel(e.currentTarget as HTMLElement);
+      });
     });
-  });
 
-  document.querySelectorAll('.btn-export-mock').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      (window as any).simulateExport(e.currentTarget as HTMLElement);
+    document.querySelectorAll('.btn-export-pdf').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        (window as any).exportToPDF(e.currentTarget as HTMLElement);
+      });
     });
-  });
+    
+    const searchInput = document.getElementById('report-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e: any) => {
+        if (e.key === 'Enter') {
+           (window as any).searchReport(e.target.value);
+        }
+      });
+    }
+  };
+  (window as any)._attachReportListeners();
 
   // API Explorer Events
   document.querySelectorAll('.api-ep-btn').forEach(btn => {
