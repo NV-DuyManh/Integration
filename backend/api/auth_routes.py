@@ -123,9 +123,10 @@ async def login(req: LoginRequest):
     # Cleanup expired sessions periodically
     cleanup_expired_sessions()
 
-    user = authenticate_user(req.username, req.password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+    try:
+        user = authenticate_user(req.username, req.password)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
     token = create_session(user["id"])
     logger.info("🔑 User logged in: %s", user["username"])

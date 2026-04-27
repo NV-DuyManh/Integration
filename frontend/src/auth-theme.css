@@ -311,6 +311,32 @@ body.auth-mode .auth-input:focus {
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
 }
 
+body.auth-mode .auth-input.invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+  animation: authShake 0.4s ease-in-out;
+}
+
+body.auth-mode .auth-input.valid {
+  border-color: #22c55e;
+}
+
+body.auth-mode .auth-field-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: authFadeIn 0.2s ease;
+}
+
+@keyframes authShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
 body.auth-mode .auth-input::placeholder {
   color: #94a3b8;
 }

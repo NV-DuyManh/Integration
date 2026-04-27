@@ -24,6 +24,7 @@ let employeeSearchQuery = '';
 let employeeSearchResults: any[] | null = null;
 let selectedEmployee: any = null;
 let isSearching = false;
+let isLoadingEmployee = false;
 
 // API explorer state
 let apiExplorerQuery = '/api/dashboard/status';
@@ -381,12 +382,13 @@ function renderAuthPage(): string {
 
 function renderLoginForm(): string {
   return `
-    <form id="auth-form" class="auth-form" autocomplete="off">
+    <form id="auth-form" class="auth-form" autocomplete="off" novalidate>
       <div class="auth-group">
         <label class="auth-label" for="login-username">Username</label>
         <div class="auth-input-wrap">
-          <input type="text" id="login-username" class="auth-input" placeholder="Enter username" autocomplete="username" required />
+          <input type="text" id="login-username" class="auth-input" placeholder="Enter username" autocomplete="username" />
         </div>
+        <div class="auth-field-error" id="err-login-username" style="display: none;"></div>
       </div>
 
       <div class="auth-group">
@@ -395,9 +397,10 @@ function renderLoginForm(): string {
           <a href="#" class="auth-link-small" id="link-forgot-password">Forgot password?</a>
         </div>
         <div class="auth-input-wrap">
-          <input type="password" id="login-password" class="auth-input" placeholder="Enter password" autocomplete="current-password" required />
+          <input type="password" id="login-password" class="auth-input" placeholder="Enter password" autocomplete="current-password" />
           <button type="button" class="auth-toggle-pwd" tabindex="-1">👁</button>
         </div>
+        <div class="auth-field-error" id="err-login-password" style="display: none;"></div>
       </div>
 
       <div class="auth-options">
@@ -416,27 +419,30 @@ function renderLoginForm(): string {
 
 function renderRegisterForm(): string {
   return `
-    <form id="auth-form" class="auth-form" autocomplete="off">
+    <form id="auth-form" class="auth-form" autocomplete="off" novalidate>
       <div class="auth-group">
         <label class="auth-label" for="reg-username">Username</label>
         <div class="auth-input-wrap">
-          <input type="text" id="reg-username" class="auth-input" placeholder="Choose a username" autocomplete="username" required minlength="3" maxlength="32" />
+          <input type="text" id="reg-username" class="auth-input" placeholder="Choose a username" autocomplete="username" />
         </div>
+        <div class="auth-field-error" id="err-reg-username" style="display: none;"></div>
       </div>
 
       <div class="auth-group">
         <label class="auth-label" for="reg-email">Work Email</label>
         <div class="auth-input-wrap">
-          <input type="email" id="reg-email" class="auth-input" placeholder="name@company.com" autocomplete="email" required />
+          <input type="email" id="reg-email" class="auth-input" placeholder="name@company.com" autocomplete="email" />
         </div>
+        <div class="auth-field-error" id="err-reg-email" style="display: none;"></div>
       </div>
 
       <div class="auth-group">
         <label class="auth-label" for="reg-password">Password</label>
         <div class="auth-input-wrap">
-          <input type="password" id="reg-password" class="auth-input" placeholder="Create a password" autocomplete="new-password" required minlength="6" />
+          <input type="password" id="reg-password" class="auth-input" placeholder="Create a password" autocomplete="new-password" />
           <button type="button" class="auth-toggle-pwd" tabindex="-1">👁</button>
         </div>
+        <div class="auth-field-error" id="err-reg-password" style="display: none;"></div>
         <div class="auth-strength">
            <div class="auth-strength-bar" id="str-1"></div>
            <div class="auth-strength-bar" id="str-2"></div>
@@ -449,8 +455,9 @@ function renderRegisterForm(): string {
       <div class="auth-group">
         <label class="auth-label" for="reg-confirm">Confirm Password</label>
         <div class="auth-input-wrap">
-          <input type="password" id="reg-confirm" class="auth-input" placeholder="Repeat password" autocomplete="new-password" required minlength="6" />
+          <input type="password" id="reg-confirm" class="auth-input" placeholder="Repeat password" autocomplete="new-password" />
         </div>
+        <div class="auth-field-error" id="err-reg-confirm" style="display: none;"></div>
       </div>
 
       <button type="submit" class="auth-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
@@ -465,6 +472,18 @@ function renderRegisterForm(): string {
 }
 
 function attachAuthListeners(): void {
+  // Real-time validation clearance
+  ['login-username', 'login-password', 'reg-username', 'reg-email', 'reg-password', 'reg-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => {
+         clearFieldError(id);
+         const alert = document.querySelector('.auth-alert.error');
+         if (alert) alert.remove();
+      });
+    }
+  });
+
   // Tab switching
   document.getElementById('tab-login')?.addEventListener('click', () => {
     authTab = 'login'; authError = null; authSuccess = null; render();
@@ -543,23 +562,89 @@ function attachAuthListeners(): void {
   }
 }
 
+// ── Field Validation Helpers ──────────────────────────────────────────
+function showFieldError(id: string, message: string) {
+  const input = document.getElementById(id) as HTMLInputElement;
+  const errDiv = document.getElementById('err-' + id);
+  if (input) {
+    input.classList.remove('valid');
+    input.classList.add('invalid');
+  }
+  if (errDiv) {
+    errDiv.innerHTML = `<svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${message}`;
+    errDiv.style.display = 'flex';
+  }
+}
+
+function clearFieldError(id: string) {
+  const input = document.getElementById(id) as HTMLInputElement;
+  const errDiv = document.getElementById('err-' + id);
+  if (input) {
+    input.classList.remove('invalid');
+    if (input.value.trim() !== '') {
+      input.classList.add('valid');
+    } else {
+      input.classList.remove('valid');
+    }
+  }
+  if (errDiv) {
+    errDiv.innerHTML = '';
+    errDiv.style.display = 'none';
+  }
+}
+
+function clearAllFieldErrors() {
+  ['login-username', 'login-password', 'reg-username', 'reg-email', 'reg-password', 'reg-confirm'].forEach(clearFieldError);
+}
+
+function focusFirstError() {
+  const firstInvalid = document.querySelector('.auth-input.invalid') as HTMLElement;
+  if (firstInvalid) {
+    firstInvalid.focus();
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function setAuthLoading(isLoading: boolean) {
+  authLoading = isLoading;
+  const btn = document.getElementById('auth-submit') as HTMLButtonElement;
+  if (btn) {
+    btn.disabled = isLoading;
+    btn.innerHTML = isLoading ? '<span class="auth-spinner"></span> ' + (authTab === 'login' ? 'Signing in...' : 'Creating account...') : (authTab === 'login' ? 'Sign in' : 'Create Account');
+  }
+}
+
 async function handleLogin(): Promise<void> {
+  clearAllFieldErrors();
   const username = (document.getElementById('login-username') as HTMLInputElement)?.value.trim();
   const password = (document.getElementById('login-password') as HTMLInputElement)?.value;
 
-  if (!username || !password) {
-    authError = 'Please enter both username and password';
-    render(); return;
+  let hasError = false;
+  if (!username) { showFieldError('login-username', 'Vui lòng nhập tên người dùng'); hasError = true; }
+  if (!password) { showFieldError('login-password', 'Vui lòng nhập mật khẩu'); hasError = true; }
+
+  if (hasError) {
+    focusFirstError();
+    return;
   }
 
-  authLoading = true; authError = null; authSuccess = null; render();
+  authError = null; authSuccess = null; setAuthLoading(true);
 
   const result = await api.login({ username, password });
-  authLoading = false;
+  setAuthLoading(false);
 
   if (result.error) {
-    authError = result.error.includes('401') ? 'Invalid username or password' : 'Connection failed. Is the backend running?';
-    render(); return;
+    if (result.error.includes('User not found')) {
+      showFieldError('login-username', 'Tên người dùng không tồn tại');
+      focusFirstError();
+    } else if (result.error.includes('Incorrect password') || result.error.includes('401')) {
+      showFieldError('login-password', 'Mật khẩu không chính xác');
+      focusFirstError();
+    } else {
+      authError = 'Connection failed. Is the backend running?';
+      render();
+    }
+    return;
   }
 
   if (result.data) {
@@ -570,50 +655,58 @@ async function handleLogin(): Promise<void> {
 }
 
 async function handleRegister(): Promise<void> {
+  clearAllFieldErrors();
   const username = (document.getElementById('reg-username') as HTMLInputElement)?.value.trim();
   const email = (document.getElementById('reg-email') as HTMLInputElement)?.value.trim();
   const password = (document.getElementById('reg-password') as HTMLInputElement)?.value;
   const confirm = (document.getElementById('reg-confirm') as HTMLInputElement)?.value;
 
+  let hasError = false;
+
   // Client-side validation
-  if (!username || !email || !password || !confirm) {
-    authError = 'Please fill in all fields'; render(); return;
-  }
-  if (password !== confirm) {
-    authError = 'Passwords do not match'; render(); return;
-  }
-  if (username.length < 3) {
-    authError = 'Username must be at least 3 characters'; render(); return;
-  }
-  if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
-    authError = 'Username can only contain letters, numbers, underscores, dots, hyphens'; render(); return;
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    authError = 'Please enter a valid email address'; render(); return;
-  }
-  if (password.length < 6) {
-    authError = 'Password must be at least 6 characters'; render(); return;
+  if (!username) { showFieldError('reg-username', 'Vui lòng nhập tên người dùng'); hasError = true; }
+  else if (username.length < 3) { showFieldError('reg-username', 'Tên người dùng tối thiểu 3 ký tự'); hasError = true; }
+  else if (!/^[a-zA-Z0-9_.-]+$/.test(username)) { showFieldError('reg-username', 'Tên người dùng chỉ chứa chữ cái, số, gạch dưới, chấm, gạch ngang'); hasError = true; }
+
+  if (!email) { showFieldError('reg-email', 'Vui lòng nhập email'); hasError = true; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFieldError('reg-email', 'Vui lòng nhập email hợp lệ'); hasError = true; }
+
+  if (!password) { showFieldError('reg-password', 'Vui lòng nhập mật khẩu'); hasError = true; }
+  else if (password.length < 6) { showFieldError('reg-password', 'Mật khẩu tối thiểu 6 ký tự'); hasError = true; }
+
+  if (!confirm) { showFieldError('reg-confirm', 'Vui lòng xác nhận mật khẩu'); hasError = true; }
+  else if (password !== confirm) { showFieldError('reg-confirm', 'Mật khẩu xác nhận không khớp'); hasError = true; }
+
+  if (hasError) {
+    focusFirstError();
+    return;
   }
 
-  authLoading = true; authError = null; authSuccess = null; render();
+  authError = null; authSuccess = null; setAuthLoading(true);
 
   const result = await api.register({ username, email, password, confirm_password: confirm });
-  authLoading = false;
+  setAuthLoading(false);
 
   if (result.error) {
     // Extract meaningful error
-    if (result.error.includes('409')) {
-      authError = result.error.includes('email') ? 'Email already registered' :
-        result.error.includes('Username') ? 'Username already exists' :
-          'Account already exists';
+    if (result.error.includes('409') || result.error.includes('exists') || result.error.includes('registered')) {
+      if (result.error.includes('email') || result.error.includes('Email')) {
+        showFieldError('reg-email', 'Email đã được sử dụng');
+      } else {
+        showFieldError('reg-username', 'Tên người dùng đã tồn tại');
+      }
+      focusFirstError();
     } else if (result.error.includes('400')) {
-      authError = 'Passwords do not match';
+      showFieldError('reg-confirm', 'Mật khẩu xác nhận không khớp');
+      focusFirstError();
     } else if (result.error.includes('422')) {
-      authError = 'Please check your input and try again';
+      authError = 'Vui lòng kiểm tra lại thông tin và thử lại';
+      render();
     } else {
       authError = 'Connection failed. Is the backend running?';
+      render();
     }
-    render(); return;
+    return;
   }
 
   if (result.data) {
@@ -924,7 +1017,7 @@ function renderEmployee360(): string {
               </thead>
               <tbody>
                 ${employeeSearchResults.map(e => `
-                  <tr>
+                  <tr style="cursor: pointer; transition: all 0.2s;" onclick="const btn = document.querySelector('.btn-view-emp[data-id=\\'${e.EmployeeID}\\']'); if(btn) btn.click();">
                     <td class="mono">${e.EmployeeID}</td>
                     <td style="font-weight: 600;">${e.FullName}</td>
                     <td>${e.DepartmentName || '—'}</td>
@@ -932,7 +1025,7 @@ function renderEmployee360(): string {
                     <td>
                       ${e.HasPayroll ? `<span class="status-badge online">● Synced ($${e.NetSalary})</span>` : `<span class="status-badge offline">● Missing Data</span>`}
                     </td>
-                    <td><button class="secondary-btn btn-view-emp" data-id="${e.EmployeeID}">View 360 Profile</button></td>
+                    <td><button class="secondary-btn btn-view-emp" data-id="${e.EmployeeID}" onclick="event.stopPropagation();">View 360 Profile</button></td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -944,7 +1037,22 @@ function renderEmployee360(): string {
   }
 
   let profileUI = '';
-  if (selectedEmployee) {
+  if (isLoadingEmployee) {
+    profileUI = `
+      <div class="card fade-in" style="margin-top: 32px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-accent);">
+        <div class="card-header" style="background: var(--bg-card-solid); border-bottom: 1px solid var(--border-light);">
+          <h3>Loading Employee Profile...</h3>
+        </div>
+        <div class="card-body">
+           <div class="loading-skeleton" style="height: 120px; border-radius: var(--radius-md); margin-bottom: 24px;"></div>
+           <div class="content-grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+              <div class="loading-skeleton" style="height: 200px; border-radius: var(--radius-md);"></div>
+              <div class="loading-skeleton" style="height: 200px; border-radius: var(--radius-md);"></div>
+           </div>
+        </div>
+      </div>
+    `;
+  } else if (selectedEmployee) {
     const hr = selectedEmployee.hr;
     const pr = selectedEmployee.payroll;
     profileUI = `
@@ -1323,6 +1431,7 @@ function attachEventListeners(): void {
     if (input) {
       employeeSearchQuery = input.value;
       isSearching = true;
+      selectedEmployee = null; // Clear old detail immediately
       render();
       const res = await api.searchEmployees(employeeSearchQuery);
       employeeSearchResults = res.data || [];
@@ -1341,6 +1450,7 @@ function attachEventListeners(): void {
           employeeSearchQuery = val;
           currentView = 'employee360';
           isSearching = true;
+          selectedEmployee = null; // Clear old detail immediately
           render();
 
           // Re-find input after render
@@ -1358,11 +1468,20 @@ function attachEventListeners(): void {
 
   document.querySelectorAll('.btn-view-emp').forEach(btn => {
     btn.addEventListener('click', async (e) => {
+      e.stopPropagation(); // prevent row click from double firing if btn clicked directly
       const id = (e.currentTarget as HTMLElement).dataset.id;
       if (id) {
-        const res = await api.getEmployee360(parseInt(id, 10));
-        if (res.data) {
-          selectedEmployee = res.data;
+        selectedEmployee = null;
+        isLoadingEmployee = true;
+        render(); // Show skeleton loader
+        
+        try {
+          const res = await api.getEmployee360(parseInt(id, 10));
+          if (res.data) {
+            selectedEmployee = res.data;
+          }
+        } finally {
+          isLoadingEmployee = false;
           render();
         }
       }

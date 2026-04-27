@@ -107,7 +107,7 @@ def create_user(username: str, email: str, password: str, role: str = "viewer") 
 
 
 def authenticate_user(username: str, password: str) -> dict | None:
-    """Verify credentials. Returns user dict or None."""
+    """Verify credentials. Returns user dict or raises ValueError."""
     with _get_conn() as conn:
         row = conn.execute(
             "SELECT id, username, email, password, role, created_at FROM users WHERE username = ?",
@@ -115,9 +115,9 @@ def authenticate_user(username: str, password: str) -> dict | None:
         ).fetchone()
 
         if not row:
-            return None
+            raise ValueError("User not found")
         if not _verify_password(password, row["password"]):
-            return None
+            raise ValueError("Incorrect password")
 
         return {
             "id": row["id"],
