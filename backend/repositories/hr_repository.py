@@ -81,9 +81,46 @@ class HRRepository:
             cur.execute(f"SELECT COUNT(*) FROM {safe_name}")
             return cur.fetchone()[0]
 
-    # ── Placeholder: Real queries will go here after schema discovery ──
-    # Phase 2 will add methods like:
-    #   get_employees()
-    #   get_departments()
-    #   get_employee_by_id()
-    # Based on actual HUMAN_2025 tables.
+    # ── Phase 2: Real business methods ───────────────────────────
+    @staticmethod
+    def get_employee(employee_id: int) -> dict:
+        """Get complete HR record for an employee."""
+        with sqlserver_cursor() as cur:
+            cur.execute("""
+                SELECT e.*, d.DepartmentName, p.PositionName
+                FROM dbo.Employees e
+                LEFT JOIN dbo.Departments d ON e.DepartmentID = d.DepartmentID
+                LEFT JOIN dbo.Positions p ON e.PositionID = p.PositionID
+                WHERE e.EmployeeID = ?
+            """, (employee_id,))
+            if not cur.description: return None
+            columns = [desc[0] for desc in cur.description]
+            row = cur.fetchone()
+            return dict(zip(columns, row)) if row else None
+
+    @staticmethod
+    def search_employees(query: str) -> list[dict]:
+        """Search employees by name, ID, or department."""
+        with sqlserver_cursor() as cur:
+            q = f"%{query}%"
+            cur.execute("""
+                SELECT e.EmployeeID, e.FullName, d.DepartmentName, p.PositionName, e.Status
+                FROM dbo.Employees e
+                LEFT JOIN dbo.Departments d ON e.DepartmentID = d.DepartmentID
+                LEFT JOIN dbo.Positions p ON e.PositionID = p.PositionID
+                WHERE e.FullName LIKE ? 
+                   OR d.DepartmentName LIKE ? 
+                   OR CAST(e.EmployeeID AS NVARCHAR) = ?
+                ORDER BY e.EmployeeID
+                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+            """, (q, q, query))
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+    @staticmethod
+    def get_all_employees() -> list[dict]:
+        """Get all employees for reconciliation."""
+        with sqlserver_cursor() as cur:
+            cur.execute("SELECT EmployeeID, FullName, Status FROM dbo.Employees")
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
