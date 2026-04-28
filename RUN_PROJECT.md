@@ -6,10 +6,8 @@ This document provides the exact steps to install, run, and test the Integration
 
 ### Backend Setup
 Open a terminal and run:
-```bat
+```
 cd backend
-python -m venv venv
-.\venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
