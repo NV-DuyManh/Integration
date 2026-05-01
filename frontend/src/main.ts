@@ -38,6 +38,22 @@ let reportSearchQuery = '';
 let reportSortColumn: string | null = null;
 let reportSortDir: 'asc' | 'desc' = 'asc';
 
+// Management state
+let mgmtTab: 'employees' | 'salaries' = 'employees';
+let mgmtEmployees: any[] = [];
+let mgmtSalaries: any[] = [];
+let mgmtLoading = false;
+let mgmtEmpModalOpen = false;
+let mgmtEmpForm: any = null;
+let mgmtSalModalOpen = false;
+let mgmtSalForm: any = null;
+let mgmtEmpSearch = '';
+let mgmtSalSearch = '';
+let mgmtEmpSortCol: string | null = null;
+let mgmtEmpSortDir: 'asc'|'desc' = 'asc';
+let mgmtSalSortCol: string | null = null;
+let mgmtSalSortDir: 'asc'|'desc' = 'asc';
+
 // ── Icons ───────────────────────────────────────────────────────
 const ICONS = {
   dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>`,
@@ -55,7 +71,14 @@ const ICONS = {
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
   user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
   lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
-  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`
+  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`,
+  management: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+  edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`,
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+  save: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`,
+  cancel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+  salary: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>`
 };
 
 // ── Auth State ──────────────────────────────────────────────────
@@ -753,6 +776,9 @@ function renderSidebar(): string {
           <div class="nav-item ${currentView === 'reports' ? 'active' : ''}" data-view="reports">
             <span class="nav-icon">${ICONS.reports}</span> Reports
           </div>
+          <div class="nav-item ${currentView === 'management' ? 'active' : ''}" data-view="management">
+            <span class="nav-icon">${ICONS.management}</span> Data Management
+          </div>
         </div>
 
         <div class="nav-section">
@@ -797,6 +823,7 @@ function renderHeader(): string {
     dashboard: 'Executive Dashboard',
     reconciliation: 'Reconciliation Center',
     reports: 'Actionable Reports',
+    management: 'HR & Payroll Management',
     api_explorer: 'API Explorer',
     settings: 'Settings'
   };
@@ -805,6 +832,7 @@ function renderHeader(): string {
     dashboard: 'Intelligent middleware metrics & health',
     reconciliation: 'Detect & resolve cross-database anomalies',
     reports: 'Generate read-only cross-db reports',
+    management: 'Add, update, and manage core records',
     api_explorer: 'Test endpoints and view live schema data',
     settings: 'System configuration and preferences'
   };
@@ -835,6 +863,7 @@ function renderPage(): string {
     case 'dashboard': return renderDashboard();
     case 'reconciliation': return renderReconciliation();
     case 'reports': return renderReports();
+    case 'management': return renderManagement();
     case 'api_explorer': return renderApiExplorer();
     case 'settings': return renderSettings();
     default: return renderEmployee360();
@@ -1301,6 +1330,324 @@ function renderReports(): string {
   `;
 }
 
+function renderManagement(): string {
+  const tabs = [
+    { id: 'employees', label: 'Employees', icon: ICONS.user },
+    { id: 'salaries', label: 'Salaries', icon: ICONS.salary }
+  ];
+
+  let contentHtml = '';
+  if (mgmtLoading && mgmtEmployees.length === 0 && mgmtSalaries.length === 0) {
+    contentHtml = `<div class="loading-skeleton" style="height: 400px; margin-top: 24px; border-radius: var(--radius-lg);"></div>`;
+  } else if (mgmtTab === 'employees') {
+    let displayData = mgmtEmployees;
+    if (mgmtEmpSearch) {
+      const q = mgmtEmpSearch.toLowerCase();
+      displayData = displayData.filter(e => 
+        (e.FullName || '').toLowerCase().includes(q) || 
+        String(e.EmployeeID).includes(q) ||
+        (e.Email || '').toLowerCase().includes(q)
+      );
+    }
+    if (mgmtEmpSortCol) {
+      displayData = [...displayData].sort((a, b) => {
+        const valA = a[mgmtEmpSortCol!];
+        const valB = b[mgmtEmpSortCol!];
+        if (valA < valB) return mgmtEmpSortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return mgmtEmpSortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    contentHtml = `
+      <div class="card mt-6 fade-in" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div class="card-header" style="background: var(--bg-card-solid); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 20px 24px;">
+          <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;"><span style="color: var(--accent); width:20px;height:20px;">${ICONS.user}</span> Employee Directory</h3>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="search-container" style="position: relative;">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 14px; height: 14px;">${ICONS.search}</span>
+              <input type="text" id="mgmt-emp-search" class="search-input" style="padding: 8px 12px 8px 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-primary); width: 200px; font-size: 13px;" placeholder="Search employees..." value="${mgmtEmpSearch}" oninput="window._mgmtEmpSearch(this.value)">
+            </div>
+            <button class="primary-btn" id="btn-add-emp" style="padding: 8px 16px; font-size: 13px; border-radius: 999px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); box-shadow: 0 4px 12px var(--accent-glow);"><span style="width:14px;height:14px;margin-right:6px;">${ICONS.plus}</span> Add Employee</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0; overflow-x: auto;">
+          <table class="data-table" style="margin: 0; width: 100%;">
+            <thead style="background: var(--bg-sidebar-solid);">
+              <tr>
+                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtEmpSort('EmployeeID')">ID ${mgmtEmpSortCol === 'EmployeeID' ? (mgmtEmpSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtEmpSort('FullName')">Full Name ${mgmtEmpSortCol === 'FullName' ? (mgmtEmpSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                <th style="padding: 16px;">Email</th>
+                <th style="padding: 16px;">Department ID</th>
+                <th style="padding: 16px;">Status</th>
+                <th style="text-align: right; padding: 16px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${displayData.length === 0 ? '<tr><td colspan="6" class="text-center" style="padding: 32px; color: var(--text-muted);">No employees found matching your criteria.</td></tr>' :
+                displayData.map(e => `
+                  <tr style="transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--bg-card-solid)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <td class="mono" style="padding: 16px;">${e.EmployeeID}</td>
+                    <td style="font-weight: 600; padding: 16px;">${e.FullName}</td>
+                    <td style="padding: 16px; color: var(--text-secondary);">${e.Email || '—'}</td>
+                    <td style="padding: 16px;">${e.DepartmentID || '—'}</td>
+                    <td style="padding: 16px;"><span class="status-badge ${e.Status === 'Active' ? 'online' : 'offline'}" style="padding: 4px 10px; border-radius: 999px;">● ${e.Status || '—'}</span></td>
+                    <td style="text-align: right; padding: 16px;">
+                      <button class="secondary-btn btn-edit-emp" data-id="${e.EmployeeID}" style="padding: 8px; margin-right: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border);" title="Edit"><span style="width:16px;height:16px;color:var(--text-primary);">${ICONS.edit}</span></button>
+                      <button class="secondary-btn btn-del-emp" data-id="${e.EmployeeID}" style="padding: 8px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);" title="Delete"><span style="width:16px;height:16px;color:var(--danger);">${ICONS.trash}</span></button>
+                    </td>
+                  </tr>
+                `).join('')
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      ${mgmtEmpModalOpen ? renderEmpModal() : ''}
+    `;
+  } else {
+    let displayData = mgmtSalaries;
+    if (mgmtSalSearch) {
+      const q = mgmtSalSearch.toLowerCase();
+      displayData = displayData.filter(s => 
+        String(s.EmployeeID).includes(q) || 
+        String(s.SalaryID).includes(q) ||
+        (s.SalaryMonth || '').includes(q)
+      );
+    }
+    if (mgmtSalSortCol) {
+      displayData = [...displayData].sort((a, b) => {
+        const valA = a[mgmtSalSortCol!];
+        const valB = b[mgmtSalSortCol!];
+        if (valA < valB) return mgmtSalSortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return mgmtSalSortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    contentHtml = `
+      <div class="card mt-6 fade-in" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div class="card-header" style="background: var(--bg-card-solid); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 20px 24px;">
+          <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;"><span style="color: var(--success); width:20px;height:20px;">${ICONS.salary}</span> Payroll Records</h3>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="search-container" style="position: relative;">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 14px; height: 14px;">${ICONS.search}</span>
+              <input type="text" id="mgmt-sal-search" class="search-input" style="padding: 8px 12px 8px 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-primary); width: 200px; font-size: 13px;" placeholder="Search ID or Month..." value="${mgmtSalSearch}" oninput="window._mgmtSalSearch(this.value)">
+            </div>
+            <button class="primary-btn" id="btn-add-sal" style="padding: 8px 16px; font-size: 13px; border-radius: 999px; background: linear-gradient(135deg, var(--success) 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); border: none;"><span style="width:14px;height:14px;margin-right:6px;">${ICONS.plus}</span> Add Salary</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0; overflow-x: auto;">
+          <table class="data-table" style="margin: 0; width: 100%;">
+            <thead style="background: var(--bg-sidebar-solid);">
+              <tr>
+                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('SalaryID')">ID ${mgmtSalSortCol === 'SalaryID' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('EmployeeID')">Emp ID ${mgmtSalSortCol === 'EmployeeID' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('SalaryMonth')">Month ${mgmtSalSortCol === 'SalaryMonth' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                <th style="text-align: right; padding: 16px;">Base</th>
+                <th style="text-align: right; padding: 16px;">Bonus</th>
+                <th style="text-align: right; padding: 16px;">Deductions</th>
+                <th style="text-align: right; padding: 16px; cursor: pointer;" onclick="window._mgmtSalSort('NetSalary')">Net ${mgmtSalSortCol === 'NetSalary' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                <th style="text-align: right; padding: 16px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${displayData.length === 0 ? '<tr><td colspan="8" class="text-center" style="padding: 32px; color: var(--text-muted);">No salaries found matching your criteria.</td></tr>' :
+                displayData.map(s => `
+                  <tr style="transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--bg-card-solid)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <td class="mono" style="padding: 16px;">${s.SalaryID}</td>
+                    <td class="mono" style="font-weight: 600; padding: 16px;">${s.EmployeeID}</td>
+                    <td style="padding: 16px;">${s.SalaryMonth}</td>
+                    <td style="text-align: right; padding: 16px;">$${s.BaseSalary?.toLocaleString() || 0}</td>
+                    <td style="text-align: right; color: var(--success); padding: 16px;">$${s.Bonus?.toLocaleString() || 0}</td>
+                    <td style="text-align: right; color: var(--danger); padding: 16px;">-$${s.Deductions?.toLocaleString() || 0}</td>
+                    <td style="text-align: right; font-weight: 600; padding: 16px;">$${s.NetSalary?.toLocaleString() || 0}</td>
+                    <td style="text-align: right; padding: 16px;">
+                      <button class="secondary-btn btn-edit-sal" data-id="${s.SalaryID}" style="padding: 8px; margin-right: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border);" title="Edit"><span style="width:16px;height:16px;color:var(--text-primary);">${ICONS.edit}</span></button>
+                      <button class="secondary-btn btn-del-sal" data-id="${s.SalaryID}" style="padding: 8px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);" title="Delete"><span style="width:16px;height:16px;color:var(--danger);">${ICONS.trash}</span></button>
+                    </td>
+                  </tr>
+                `).join('')
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      ${mgmtSalModalOpen ? renderSalModal() : ''}
+    `;
+  }
+
+  return `
+    <div class="card" style="box-shadow: var(--shadow-md); border-radius: var(--radius-lg);">
+      <div class="card-header" style="background: var(--bg-card-solid); border-bottom: none; padding: 24px;">
+        <div>
+          <h3 style="font-size: 20px; font-weight: 700;">Data Management Center</h3>
+          <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">Add, update, and manage core HR and Payroll records with automated cross-database synchronization.</p>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0 24px 24px 24px;">
+        <div style="display: flex; gap: 16px;">
+          ${tabs.map(t => `
+            <button class="mgmt-tab ${mgmtTab === t.id ? 'active' : ''}" data-tab="${t.id}" style="
+              display: flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 999px;
+              border: 1px solid ${mgmtTab === t.id ? 'var(--accent)' : 'var(--border)'};
+              background: ${mgmtTab === t.id ? 'var(--accent-glow)' : 'var(--bg-card)'};
+              color: ${mgmtTab === t.id ? 'var(--accent)' : 'var(--text-primary)'};
+              font-weight: 600; cursor: pointer; transition: all var(--transition); box-shadow: ${mgmtTab === t.id ? 'var(--shadow-sm)' : 'none'};
+            ">
+              <span style="width:18px;height:18px;">${t.icon}</span> ${t.label}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+    
+    ${contentHtml}
+  `;
+}
+
+function renderEmpModal(): string {
+  const isEdit = !!mgmtEmpForm.EmployeeID;
+  return `
+    <div class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;">
+      <div class="card fade-in" style="width: 100%; max-width: 550px; background: var(--bg-primary); box-shadow: 0 24px 48px rgba(0,0,0,0.2); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border-accent);">
+        <div class="card-header" style="background: var(--gradient-header); padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent-glow); color: var(--accent); display: flex; align-items: center; justify-content: center;">
+               <span style="width: 18px; height: 18px;">${isEdit ? ICONS.edit : ICONS.plus}</span>
+            </div>
+            ${isEdit ? 'Edit Employee Profile' : 'Register New Employee'}
+          </h3>
+          <button id="btn-close-emp" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'"><span style="width: 20px; height: 20px; display: block;">${ICONS.cancel}</span></button>
+        </div>
+        <div class="card-body" style="padding: 32px; max-height: 80vh; overflow-y: auto;">
+          <form id="mgmt-emp-form" style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Full Name <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="emp-FullName" class="auth-input" required value="${mgmtEmpForm.FullName || ''}" placeholder="e.g. John Doe" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; transition: border-color 0.2s;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Date of Birth <span style="color:var(--danger)">*</span></label>
+                <input type="date" id="emp-DateOfBirth" class="auth-input" required value="${mgmtEmpForm.DateOfBirth || ''}" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary);">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Hire Date <span style="color:var(--danger)">*</span></label>
+                <input type="date" id="emp-HireDate" class="auth-input" required value="${mgmtEmpForm.HireDate || new Date().toISOString().split('T')[0]}" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary);">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Email</label>
+                <input type="email" id="emp-Email" class="auth-input" value="${mgmtEmpForm.Email || ''}" placeholder="e.g. john@example.com" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Phone Number</label>
+                <input type="text" id="emp-PhoneNumber" class="auth-input" value="${mgmtEmpForm.PhoneNumber || ''}" placeholder="e.g. +1 234 567 890" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Department ID</label>
+                <input type="number" id="emp-DepartmentID" class="auth-input" value="${mgmtEmpForm.DepartmentID || ''}" placeholder="e.g. 1" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Position ID</label>
+                <input type="number" id="emp-PositionID" class="auth-input" value="${mgmtEmpForm.PositionID || ''}" placeholder="e.g. 2" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Status</label>
+              <select id="emp-Status" class="auth-input" style="appearance: auto; border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary); cursor: pointer;">
+                <option value="Active" ${mgmtEmpForm.Status === 'Active' ? 'selected' : ''}>Active</option>
+                <option value="Inactive" ${mgmtEmpForm.Status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                <option value="Terminated" ${mgmtEmpForm.Status === 'Terminated' ? 'selected' : ''}>Terminated</option>
+              </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+              <button type="button" class="secondary-btn" id="btn-cancel-emp" style="padding: 12px 24px; border-radius: 999px; font-weight: 600;"><span style="width:16px;height:16px;margin-right:6px;vertical-align:text-bottom;">${ICONS.cancel}</span> Cancel</button>
+              <button type="submit" class="primary-btn" style="padding: 12px 32px; border-radius: 999px; font-weight: 600; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); box-shadow: 0 4px 16px var(--accent-glow); border: none;">
+                 ${mgmtLoading ? '<div class="spinner" style="width:16px;height:16px;margin-right:8px;display:inline-block;"></div> Saving...' : `<span style="width:16px;height:16px;margin-right:8px;vertical-align:text-bottom;">${ICONS.save}</span> ${isEdit ? 'Save Changes' : 'Create Employee'}`}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSalModal(): string {
+  const isEdit = !!mgmtSalForm.SalaryID;
+  return `
+    <div class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;">
+      <div class="card fade-in" style="width: 100%; max-width: 500px; background: var(--bg-primary); box-shadow: 0 24px 48px rgba(0,0,0,0.2); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); display: flex; align-items: center; justify-content: center;">
+               <span style="width: 18px; height: 18px;">${isEdit ? ICONS.edit : ICONS.salary}</span>
+            </div>
+            ${isEdit ? 'Update Salary Record' : 'Add New Salary Record'}
+          </h3>
+          <button id="btn-close-sal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'"><span style="width: 20px; height: 20px; display: block;">${ICONS.cancel}</span></button>
+        </div>
+        <div class="card-body" style="padding: 32px;">
+          <form id="mgmt-sal-form" style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Employee ID <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="sal-EmployeeID" class="auth-input" required value="${mgmtSalForm.EmployeeID || ''}" ${isEdit ? 'readonly' : ''} placeholder="e.g. 1001" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: ${isEdit ? 'var(--bg-secondary)' : 'var(--bg-card-solid)'}; font-size: 14px; cursor: ${isEdit ? 'not-allowed' : 'text'};">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Salary Month <span style="color:var(--danger)">*</span></label>
+              <input type="date" id="sal-SalaryMonth" class="auth-input" required value="${mgmtSalForm.SalaryMonth || ''}" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary);">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Base Salary ($) <span style="color:var(--danger)">*</span></label>
+                <div style="position: relative;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600;">$</span>
+                  <input type="number" id="sal-BaseSalary" class="auth-input" required value="${mgmtSalForm.BaseSalary || ''}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%;">
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Bonus ($)</label>
+                <div style="position: relative;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--success); font-weight: 600;">$</span>
+                  <input type="number" id="sal-Bonus" class="auth-input" value="${mgmtSalForm.Bonus || 0}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%;">
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Deductions ($)</label>
+                <div style="position: relative;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--danger); font-weight: 600;">$</span>
+                  <input type="number" id="sal-Deductions" class="auth-input" value="${mgmtSalForm.Deductions || 0}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%;">
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Net Salary ($) <span style="color:var(--danger)">*</span></label>
+                <div style="position: relative;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-primary); font-weight: 600;">$</span>
+                  <input type="number" id="sal-NetSalary" class="auth-input" required value="${mgmtSalForm.NetSalary || ''}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%; font-weight: 700;">
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+              <button type="button" class="secondary-btn" id="btn-cancel-sal" style="padding: 12px 24px; border-radius: 999px; font-weight: 600;"><span style="width:16px;height:16px;margin-right:6px;vertical-align:text-bottom;">${ICONS.cancel}</span> Cancel</button>
+              <button type="submit" class="primary-btn" style="padding: 12px 32px; border-radius: 999px; font-weight: 600; background: linear-gradient(135deg, var(--success) 0%, #059669 100%); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); border: none;">
+                 ${mgmtLoading ? '<div class="spinner" style="width:16px;height:16px;margin-right:8px;display:inline-block;border-top-color:white;"></div> Saving...' : `<span style="width:16px;height:16px;margin-right:8px;vertical-align:text-bottom;">${ICONS.save}</span> ${isEdit ? 'Save Changes' : 'Add Salary'}`}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderApiExplorer(): string {
   const endpoints = [
     { method: 'GET', path: '/api/dashboard/status', label: 'System Status' },
@@ -1525,6 +1872,175 @@ function attachEventListeners(): void {
     }
   };
   (window as any)._attachReportListeners();
+  
+  (window as any)._attachManagementListeners = function() {
+    document.querySelectorAll('.mgmt-tab').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const tab = (e.currentTarget as HTMLElement).dataset.tab as any;
+        if (tab && mgmtTab !== tab) {
+          mgmtTab = tab;
+          await loadManagementData();
+        }
+      });
+    });
+
+    document.getElementById('btn-add-emp')?.addEventListener('click', () => {
+      mgmtEmpForm = {};
+      mgmtEmpModalOpen = true;
+      render();
+    });
+
+    document.querySelectorAll('.btn-edit-emp').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt((e.currentTarget as HTMLElement).dataset.id || '0', 10);
+        const emp = mgmtEmployees.find(x => x.EmployeeID === id);
+        if (emp) {
+          mgmtEmpForm = { ...emp };
+          // Format date for input
+          if (mgmtEmpForm.DateOfBirth) mgmtEmpForm.DateOfBirth = mgmtEmpForm.DateOfBirth.split('T')[0];
+          if (mgmtEmpForm.HireDate) mgmtEmpForm.HireDate = mgmtEmpForm.HireDate.split('T')[0];
+          mgmtEmpModalOpen = true;
+          render();
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-del-emp').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = parseInt((e.currentTarget as HTMLElement).dataset.id || '0', 10);
+        if (confirm(`Are you sure you want to delete Employee ${id}?`)) {
+          mgmtLoading = true; render();
+          const res = await api.deleteEmployee(id);
+          if (res.error) alert(`Failed to delete: ${res.error}`);
+          await loadManagementData();
+        }
+      });
+    });
+
+    document.getElementById('btn-cancel-emp')?.addEventListener('click', () => {
+      mgmtEmpModalOpen = false;
+      render();
+    });
+    
+    document.getElementById('btn-close-emp')?.addEventListener('click', () => {
+      mgmtEmpModalOpen = false;
+      render();
+    });
+
+    document.getElementById('mgmt-emp-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = {
+        FullName: (document.getElementById('emp-FullName') as HTMLInputElement).value,
+        DateOfBirth: (document.getElementById('emp-DateOfBirth') as HTMLInputElement).value,
+        HireDate: (document.getElementById('emp-HireDate') as HTMLInputElement).value,
+        Email: (document.getElementById('emp-Email') as HTMLInputElement).value,
+        PhoneNumber: (document.getElementById('emp-PhoneNumber') as HTMLInputElement).value,
+        DepartmentID: parseInt((document.getElementById('emp-DepartmentID') as HTMLInputElement).value || '0', 10) || null,
+        PositionID: parseInt((document.getElementById('emp-PositionID') as HTMLInputElement).value || '0', 10) || null,
+        Status: (document.getElementById('emp-Status') as HTMLSelectElement).value,
+      };
+
+      mgmtLoading = true; render();
+      let res;
+      if (mgmtEmpForm.EmployeeID) {
+        res = await api.updateEmployee(mgmtEmpForm.EmployeeID, form);
+      } else {
+        res = await api.addEmployee(form);
+      }
+      
+      if (res.error) alert(`Failed to save employee: ${res.error}`);
+      mgmtEmpModalOpen = false;
+      await loadManagementData();
+    });
+
+    document.getElementById('btn-add-sal')?.addEventListener('click', () => {
+      mgmtSalForm = {};
+      mgmtSalModalOpen = true;
+      render();
+    });
+
+    document.querySelectorAll('.btn-edit-sal').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt((e.currentTarget as HTMLElement).dataset.id || '0', 10);
+        const sal = mgmtSalaries.find(x => x.SalaryID === id);
+        if (sal) {
+          mgmtSalForm = { ...sal };
+          if (mgmtSalForm.SalaryMonth) mgmtSalForm.SalaryMonth = mgmtSalForm.SalaryMonth.split('T')[0];
+          mgmtSalModalOpen = true;
+          render();
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-del-sal').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = parseInt((e.currentTarget as HTMLElement).dataset.id || '0', 10);
+        if (confirm(`Are you sure you want to delete Salary ${id}?`)) {
+          mgmtLoading = true; render();
+          const res = await api.deleteSalary(id);
+          if (res.error) alert(`Failed to delete: ${res.error}`);
+          await loadManagementData();
+        }
+      });
+    });
+
+    document.getElementById('btn-cancel-sal')?.addEventListener('click', () => {
+      mgmtSalModalOpen = false;
+      render();
+    });
+
+    document.getElementById('btn-close-sal')?.addEventListener('click', () => {
+      mgmtSalModalOpen = false;
+      render();
+    });
+
+    document.getElementById('mgmt-sal-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = {
+        EmployeeID: parseInt((document.getElementById('sal-EmployeeID') as HTMLInputElement).value || '0', 10),
+        SalaryMonth: (document.getElementById('sal-SalaryMonth') as HTMLInputElement).value,
+        BaseSalary: parseFloat((document.getElementById('sal-BaseSalary') as HTMLInputElement).value || '0'),
+        Bonus: parseFloat((document.getElementById('sal-Bonus') as HTMLInputElement).value || '0'),
+        Deductions: parseFloat((document.getElementById('sal-Deductions') as HTMLInputElement).value || '0'),
+        NetSalary: parseFloat((document.getElementById('sal-NetSalary') as HTMLInputElement).value || '0'),
+      };
+
+      mgmtLoading = true; render();
+      let res;
+      if (mgmtSalForm.SalaryID) {
+        res = await api.updateSalary(mgmtSalForm.SalaryID, form);
+      } else {
+        res = await api.addSalary(form);
+      }
+      
+      if (res.error) alert(`Failed to save salary: ${res.error}`);
+      mgmtSalModalOpen = false;
+      await loadManagementData();
+    });
+  };
+  (window as any)._attachManagementListeners();
+  
+  (window as any)._mgmtEmpSearch = function(val: string) {
+    mgmtEmpSearch = val;
+    render();
+  };
+  
+  (window as any)._mgmtSalSearch = function(val: string) {
+    mgmtSalSearch = val;
+    render();
+  };
+  
+  (window as any)._mgmtEmpSort = function(col: string) {
+    if (mgmtEmpSortCol === col) mgmtEmpSortDir = mgmtEmpSortDir === 'asc' ? 'desc' : 'asc';
+    else { mgmtEmpSortCol = col; mgmtEmpSortDir = 'asc'; }
+    render();
+  };
+  
+  (window as any)._mgmtSalSort = function(col: string) {
+    if (mgmtSalSortCol === col) mgmtSalSortDir = mgmtSalSortDir === 'asc' ? 'desc' : 'asc';
+    else { mgmtSalSortCol = col; mgmtSalSortDir = 'asc'; }
+    render();
+  };
 
   // API Explorer Events
   document.querySelectorAll('.api-ep-btn').forEach(btn => {
@@ -1582,6 +2098,24 @@ async function loadAllData(): Promise<void> {
     if (reportRes.data) reportData = reportRes.data;
   }
 
+  if (currentView === 'management') {
+    await loadManagementData();
+  }
+
+  render();
+}
+
+async function loadManagementData(): Promise<void> {
+  mgmtLoading = true;
+  render();
+  if (mgmtTab === 'employees') {
+    const res = await api.getHrTableData('Employees', 100);
+    mgmtEmployees = res.data?.data || [];
+  } else {
+    const res = await api.getPayrollTableData('salaries', 100);
+    mgmtSalaries = res.data?.data || [];
+  }
+  mgmtLoading = false;
   render();
 }
 
