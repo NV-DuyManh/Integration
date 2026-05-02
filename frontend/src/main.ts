@@ -753,12 +753,12 @@ function renderSidebar(): string {
   const mysqlStatus = dbStatus?.mysql.connected;
 
   return `
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar glass" id="sidebar" style="border-radius: 0; border-top: none; border-bottom: none; border-left: none; background: rgba(10, 15, 30, 0.92); box-shadow: inset -1px 0 0 rgba(0, 242, 254, 0.06), 4px 0 24px rgba(0, 0, 0, 0.3);">
       <div class="sidebar-brand">
-        <div class="brand-icon">${ICONS.bolt}</div>
+        <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); box-shadow: 0 4px 16px rgba(0, 242, 254, 0.3);">${ICONS.bolt}</div>
         <div>
-          <h1>NexusBridge</h1>
-          <span class="subtitle">HR & Payroll Middleware</span>
+          <h1 class="glow-text" style="font-size: 16px; font-weight: 800; letter-spacing: 0.05em;">NexusBridge</h1>
+          <span class="subtitle" style="color: var(--text-muted); font-size: 11px;">HR & Payroll Middleware</span>
         </div>
       </div>
 
@@ -782,7 +782,7 @@ function renderSidebar(): string {
         </div>
 
         <div class="nav-section">
-          <div class="nav-section-title">Developer</div>
+          <div class="nav-section-title" style="color: var(--accent-cyan); opacity: 0.6;">Developer</div>
           <div class="nav-item ${currentView === 'api_explorer' ? 'active' : ''}" data-view="api_explorer">
             <span class="nav-icon">${ICONS.api_explorer}</span> API Explorer
           </div>
@@ -792,23 +792,23 @@ function renderSidebar(): string {
         </div>
       </nav>
 
-      <div class="sidebar-footer">
+      <div class="sidebar-footer" style="background: rgba(10, 15, 30, 0.95); border-top: 1px solid rgba(0, 242, 254, 0.08);">
         <div class="connection-indicator">
           <span class="dot ${sqlStatus === undefined ? 'checking' : sqlStatus ? 'connected' : 'disconnected'}"></span>
           <span class="db-name">HUMAN_2025</span>
-          <span class="db-engine">SQL Server</span>
+          <span class="db-engine" style="color: var(--accent-cyan); opacity: 0.7;">SQL Server</span>
         </div>
         <div class="connection-indicator">
           <span class="dot ${mysqlStatus === undefined ? 'checking' : mysqlStatus ? 'connected' : 'disconnected'}"></span>
           <span class="db-name">PAYROLL_2026</span>
-          <span class="db-engine">MySQL</span>
+          <span class="db-engine" style="color: var(--accent-yellow); opacity: 0.7;">MySQL</span>
         </div>
         ${authUser ? `
-        <div class="sidebar-user">
-          <div class="user-avatar">${authUser.username.charAt(0).toUpperCase()}</div>
+        <div class="sidebar-user" style="border-top: 1px solid rgba(0, 242, 254, 0.08); margin-top: 8px; padding-top: 12px;">
+          <div class="user-avatar" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); box-shadow: 0 2px 10px rgba(0, 242, 254, 0.25);">${authUser.username.charAt(0).toUpperCase()}</div>
           <div class="user-info">
-            <span class="user-name">${authUser.username}</span>
-            <span class="user-role">${authUser.role}</span>
+            <span class="user-name" style="color: #e2e8f0;">${authUser.username}</span>
+            <span class="user-role" style="color: var(--accent-cyan); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">${authUser.role}</span>
           </div>
         </div>
         ` : ''}
@@ -838,20 +838,20 @@ function renderHeader(): string {
   };
 
   return `
-    <header class="header">
+    <header class="header glass" style="border-radius: 0; border-left: none; border-right: none; border-top: none; background: rgba(10, 15, 30, 0.85); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(0, 242, 254, 0.06);">
       <div class="header-left">
         <div>
-          <h2>${titles[currentView] || 'Dashboard'}</h2>
-          <span class="breadcrumb">${subtitles[currentView] || ''}</span>
+          <h2 class="glow-text2" style="font-size: 18px; font-weight: 800;">${titles[currentView] || 'Dashboard'}</h2>
+          <span class="breadcrumb" style="color: var(--text-muted); font-size: 12px;">${subtitles[currentView] || ''}</span>
         </div>
       </div>
-      <div class="header-right" style="display: flex; gap: 16px; align-items: center;">
+      <div class="header-right" style="display: flex; gap: 12px; align-items: center;">
         <div class="global-search" style="position: relative;">
-          <input type="text" id="global-search-input" placeholder="Search employees..." style="background: var(--bg-card-solid); border: 1px solid var(--border); padding: 8px 12px 8px 32px; border-radius: var(--radius-sm); color: var(--text-primary); width: 220px; font-size: 13px;">
-          <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 14px; height: 14px;">${ICONS.search}</span>
+          <input type="text" id="global-search-input" class="cyber-input" placeholder="Search employees..." style="padding: 8px 12px 8px 32px; border-radius: var(--radius-sm); width: 220px; font-size: 13px;">
+          <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--accent-cyan); opacity: 0.6; width: 14px; height: 14px;">${ICONS.search}</span>
         </div>
-        <button class="header-btn" id="btn-refresh"><span style="width: 14px; height: 14px">${ICONS.refresh}</span> Refresh</button>
-        <button class="header-btn header-btn-logout" id="btn-logout"><span style="width: 14px; height: 14px">${ICONS.logout}</span> Logout</button>
+        <button class="header-btn btn-primary" id="btn-refresh" style="padding: 7px 14px; font-size: 12px; letter-spacing: 0.5px;"><span style="width: 14px; height: 14px">${ICONS.refresh}</span> Refresh</button>
+        <button class="header-btn btn-delete" id="btn-logout" style="padding: 7px 14px; font-size: 12px; font-weight: 600;"><span style="width: 14px; height: 14px">${ICONS.logout}</span> Logout</button>
       </div>
     </header>
   `;
@@ -881,68 +881,72 @@ function renderDashboard(): string {
 
   return `
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card glass" style="position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));"></div>
         <div class="stat-header">
-          <span class="stat-label">Integration Health</span>
-          <span class="stat-icon" style="width:20px;height:20px">${ICONS.heart}</span>
+          <span class="stat-label" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;">Integration Health</span>
+          <span class="stat-icon" style="width:20px;height:20px; color: var(--accent-green); filter: drop-shadow(0 0 4px rgba(74, 222, 128, 0.5));">${ICONS.heart}</span>
         </div>
-        <div class="stat-value ${healthScore >= 90 ? 'positive-text' : 'negative-text'}">${healthScore}%</div>
-        <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-bottom: 12px; overflow: hidden;">
-           <div style="height: 100%; width: ${healthScore}%; background: var(--success); border-radius: 2px; transition: width 1.5s var(--spring);"></div>
+        <div class="stat-value glow-text" style="font-size: 32px; font-weight: 800;">${healthScore}%</div>
+        <div style="height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-bottom: 12px; overflow: hidden;">
+           <div style="height: 100%; width: ${healthScore}%; background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); border-radius: 2px; transition: width 1.5s var(--spring); box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);"></div>
         </div>
-        <div class="stat-change ${healthScore >= 90 ? 'positive' : 'negative'}">System Sync Quality</div>
+        <div class="stat-change" style="color: var(--accent-green); font-size: 11px;">System Sync Quality</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card glass" style="position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-red), var(--accent-yellow));"></div>
         <div class="stat-header">
-          <span class="stat-label">Reconciliation Alerts</span>
-          <span class="stat-icon" style="width:20px;height:20px">${ICONS.reconciliation}</span>
+          <span class="stat-label" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;">Reconciliation Alerts</span>
+          <span class="stat-icon" style="width:20px;height:20px; color: ${reconAlerts > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; filter: drop-shadow(0 0 4px ${reconAlerts > 0 ? 'rgba(239,68,68,0.5)' : 'rgba(74,222,128,0.5)'});">${ICONS.reconciliation}</span>
         </div>
-        <div class="stat-value ${reconAlerts > 0 ? 'negative-text' : 'positive-text'}">${reconAlerts}</div>
+        <div class="stat-value" style="font-size: 32px; font-weight: 800; color: ${reconAlerts > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; text-shadow: 0 0 10px ${reconAlerts > 0 ? 'rgba(239,68,68,0.4)' : 'rgba(74,222,128,0.4)'};">${reconAlerts}</div>
         <div style="height: 24px; display: flex; align-items: flex-end; gap: 4px; margin-bottom: 12px;">
-           ${[4, 8, 3, 10, 5, 2, reconAlerts].map(val => `<div style="flex: 1; background: ${reconAlerts > 0 ? 'var(--danger)' : 'var(--success)'}; height: ${Math.max(10, val * 5)}%; border-radius: 2px; opacity: 0.8; transition: height 0.5s ease;"></div>`).join('')}
+           ${[4, 8, 3, 10, 5, 2, reconAlerts].map(val => `<div style="flex: 1; background: ${reconAlerts > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; height: ${Math.max(10, val * 5)}%; border-radius: 2px; opacity: 0.6; transition: height 0.5s ease;"></div>`).join('')}
         </div>
-        <div class="stat-change ${reconAlerts > 0 ? 'negative' : 'positive'}">Missing Cross-Records</div>
+        <div class="stat-change" style="color: ${reconAlerts > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}; font-size: 11px;">Missing Cross-Records</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card glass" style="position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-yellow), var(--accent-pink));"></div>
         <div class="stat-header">
-          <span class="stat-label">Data Quality Index</span>
-          <span class="stat-icon" style="width:20px;height:20px">${ICONS.alert}</span>
+          <span class="stat-label" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;">Data Quality Index</span>
+          <span class="stat-icon" style="width:20px;height:20px; color: var(--accent-yellow); filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.5));">${ICONS.alert}</span>
         </div>
-        <div class="stat-value ${anomalies > 0 ? 'negative-text' : 'positive-text'}">${anomalies} Issues</div>
+        <div class="stat-value" style="font-size: 32px; font-weight: 800; color: ${anomalies > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)'}; text-shadow: 0 0 10px ${anomalies > 0 ? 'rgba(250,204,21,0.4)' : 'rgba(74,222,128,0.4)'};">${anomalies} Issues</div>
         <div style="height: 24px; display: flex; align-items: center; margin-bottom: 12px; position: relative;">
-          <svg viewBox="0 0 100 20" style="width: 100%; height: 100%; overflow: visible; stroke: var(--warning); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+          <svg viewBox="0 0 100 20" style="width: 100%; height: 100%; overflow: visible; stroke: var(--accent-yellow); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(250,204,21,0.3));">
             <path d="M 0,10 L 20,15 L 40,5 L 60,18 L 80,8 L 100,12" style="stroke-dasharray: 200; stroke-dashoffset: 0; animation: draw 2s ease-out forwards;"></path>
           </svg>
         </div>
-        <div class="stat-change ${anomalies > 0 ? 'negative' : 'positive'}">Suspicious anomalies</div>
+        <div class="stat-change" style="color: var(--accent-yellow); font-size: 11px;">Suspicious anomalies</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card glass" style="position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));"></div>
         <div class="stat-header">
-          <span class="stat-label">Unified Employee Count</span>
-          <span class="stat-icon" style="width:20px;height:20px">${ICONS.user}</span>
+          <span class="stat-label" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;">Unified Employee Count</span>
+          <span class="stat-icon" style="width:20px;height:20px; color: var(--accent-cyan); filter: drop-shadow(0 0 4px rgba(0, 242, 254, 0.5));">${ICONS.user}</span>
         </div>
-        <div class="stat-value">${totalEmployees}</div>
-        <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-bottom: 12px; overflow: hidden;">
-           <div style="height: 100%; width: 100%; background: var(--info); border-radius: 2px; transition: width 1.5s var(--spring);"></div>
+        <div class="stat-value glow-text" style="font-size: 32px; font-weight: 800;">${totalEmployees}</div>
+        <div style="height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-bottom: 12px; overflow: hidden;">
+           <div style="height: 100%; width: 100%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan)); border-radius: 2px; transition: width 1.5s var(--spring); box-shadow: 0 0 8px rgba(0, 242, 254, 0.4);"></div>
         </div>
-        <div class="stat-change positive">Master Records</div>
+        <div class="stat-change" style="color: var(--accent-cyan); font-size: 11px;">Master Records</div>
       </div>
     </div>
     
     <div class="stats-grid" style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(2, 1fr);">
-      <div class="stat-card" style="border-left: 4px solid var(--sql-color)">
+      <div class="stat-card glass" style="border-left: 3px solid var(--accent-cyan); box-shadow: inset 4px 0 12px rgba(0, 242, 254, 0.05);">
         <div class="stat-header">
-          <span class="stat-label">SQL Server (HUMAN_2025)</span>
-          <span class="stat-icon" style="width:20px;height:20px">${ICONS.database}</span>
+          <span class="stat-label" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;">SQL Server (HUMAN_2025)</span>
+          <span class="stat-icon" style="width:20px;height:20px; color: var(--accent-cyan); filter: drop-shadow(0 0 4px rgba(0, 242, 254, 0.5));">${ICONS.database}</span>
         </div>
-        <div class="stat-value"><span class="status-badge ${sqlConnected ? 'online' : 'offline'}">● ${sqlConnected ? 'Connected' : 'Offline'}</span></div>
+        <div class="stat-value"><span class="status-badge ${sqlConnected ? 'online' : 'offline'}" style="${sqlConnected ? 'box-shadow: 0 0 12px rgba(74, 222, 128, 0.2);' : ''}">● ${sqlConnected ? 'Connected' : 'Offline'}</span></div>
       </div>
-      <div class="stat-card" style="border-left: 4px solid var(--mysql-color)">
+      <div class="stat-card glass" style="border-left: 3px solid var(--accent-yellow); box-shadow: inset 4px 0 12px rgba(250, 204, 21, 0.05);">
         <div class="stat-header">
-          <span class="stat-label">MySQL (PAYROLL_2026)</span>
-          <span class="stat-icon" style="width:20px;height:20px">${ICONS.database}</span>
+          <span class="stat-label" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;">MySQL (PAYROLL_2026)</span>
+          <span class="stat-icon" style="width:20px;height:20px; color: var(--accent-yellow); filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.5));">${ICONS.database}</span>
         </div>
-        <div class="stat-value"><span class="status-badge ${mysqlConnected ? 'online' : 'offline'}">● ${mysqlConnected ? 'Connected' : 'Offline'}</span></div>
+        <div class="stat-value"><span class="status-badge ${mysqlConnected ? 'online' : 'offline'}" style="${mysqlConnected ? 'box-shadow: 0 0 12px rgba(74, 222, 128, 0.2);' : ''}">● ${mysqlConnected ? 'Connected' : 'Offline'}</span></div>
       </div>
     </div>
     
@@ -956,10 +960,10 @@ function renderDashboard(): string {
 function renderSchemaCard(title: string, badge: string, schema: SchemaResponse | null): string {
   if (!schema) {
     return `
-      <div class="card">
-        <div class="card-header">
-          <h3>${title}</h3>
-          <span class="card-badge ${badge}">${badge === 'sql-server' ? 'SQL Server' : 'MySQL'}</span>
+      <div class="card glass" style="overflow: hidden;">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(0,242,254,0.06), rgba(123,47,247,0.06)); border-bottom: 1px solid rgba(0,242,254,0.1);">
+          <h3 style="color: var(--text-primary);">${title}</h3>
+          <span class="card-badge ${badge}" style="${badge === 'sql-server' ? 'background: rgba(0,242,254,0.1); color: var(--accent-cyan); border: 1px solid rgba(0,242,254,0.2);' : 'background: rgba(250,204,21,0.1); color: var(--accent-yellow); border: 1px solid rgba(250,204,21,0.2);'}">${badge === 'sql-server' ? 'SQL Server' : 'MySQL'}</span>
         </div>
         <div class="card-body">
           <div class="loading-skeleton" style="height: 120px;"></div>
@@ -978,24 +982,28 @@ function renderSchemaCard(title: string, badge: string, schema: SchemaResponse |
   `).join('');
 
   return `
-    <div class="card">
-      <div class="card-header">
-        <h3>${title} — ${schema.table_count} tables</h3>
-        <span class="card-badge ${badge}">${schema.engine}</span>
+    <div class="card glass" style="overflow: hidden;">
+      <div class="card-header" style="background: linear-gradient(90deg, rgba(0,242,254,0.06), rgba(123,47,247,0.06)); border-bottom: 1px solid rgba(0,242,254,0.1);">
+        <h3 style="color: var(--text-primary); font-weight: 700;">${title} — ${schema.table_count} tables</h3>
+        <span class="card-badge ${badge}" style="${badge === 'sql-server' ? 'background: rgba(0,242,254,0.1); color: var(--accent-cyan); border: 1px solid rgba(0,242,254,0.2);' : 'background: rgba(250,204,21,0.1); color: var(--accent-yellow); border: 1px solid rgba(250,204,21,0.2);'}">${schema.engine}</span>
       </div>
       <div class="card-body" style="padding: 0;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Table</th>
-              <th>Columns</th>
-              <th>Rows</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows || '<tr><td colspan="3" style="text-align:center; padding:20px; color: var(--text-muted);">No tables discovered</td></tr>'}
-          </tbody>
-        </table>
+        <div class="table-wrapper" style="border-radius: 0; box-shadow: none; padding: 0;">
+          <div class="table-container" style="border-radius: 0; border: none;">
+            <table class="data-table" style="width: 100%;">
+              <thead class="table-header">
+                <tr>
+                  <th>Table</th>
+                  <th>Columns</th>
+                  <th>Rows</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows || '<tr><td colspan="3" class="table-cell" style="text-align:center; padding:20px; color: var(--text-muted);">No tables discovered</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -1360,47 +1368,51 @@ function renderManagement(): string {
     }
 
     contentHtml = `
-      <div class="card mt-6 fade-in" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-        <div class="card-header" style="background: var(--bg-card-solid); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 20px 24px;">
-          <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;"><span style="color: var(--accent); width:20px;height:20px;">${ICONS.user}</span> Employee Directory</h3>
+      <div class="card glass mt-6 fade-in" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(0,242,254,0.05), rgba(123,47,247,0.05)); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,242,254,0.1); padding: 20px 24px;">
+          <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;"><span style="color: var(--accent-cyan); width:20px;height:20px; filter: drop-shadow(0 0 4px rgba(0,242,254,0.5));">${ICONS.user}</span> Employee Directory</h3>
           <div style="display: flex; gap: 12px; align-items: center;">
             <div class="search-container" style="position: relative;">
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 14px; height: 14px;">${ICONS.search}</span>
-              <input type="text" id="mgmt-emp-search" class="search-input" style="padding: 8px 12px 8px 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-primary); width: 200px; font-size: 13px;" placeholder="Search employees..." value="${mgmtEmpSearch}" oninput="window._mgmtEmpSearch(this.value)">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--accent-cyan); opacity: 0.6; width: 14px; height: 14px;">${ICONS.search}</span>
+              <input type="text" id="mgmt-emp-search" class="cyber-input" style="padding: 8px 12px 8px 34px; border-radius: 999px; width: 200px; font-size: 13px;" placeholder="Search employees..." value="${mgmtEmpSearch}" oninput="window._mgmtEmpSearch(this.value)">
             </div>
-            <button class="primary-btn" id="btn-add-emp" style="padding: 8px 16px; font-size: 13px; border-radius: 999px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); box-shadow: 0 4px 12px var(--accent-glow);"><span style="width:14px;height:14px;margin-right:6px;">${ICONS.plus}</span> Add Employee</button>
+            <button class="btn-primary" id="btn-add-emp" style="padding: 8px 18px; font-size: 13px; border-radius: 999px;"><span style="width:14px;height:14px;margin-right:6px;">${ICONS.plus}</span> Add Employee</button>
           </div>
         </div>
         <div class="card-body" style="padding: 0; overflow-x: auto;">
-          <table class="data-table" style="margin: 0; width: 100%;">
-            <thead style="background: var(--bg-sidebar-solid);">
-              <tr>
-                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtEmpSort('EmployeeID')">ID ${mgmtEmpSortCol === 'EmployeeID' ? (mgmtEmpSortDir === 'asc' ? '↑' : '↓') : ''}</th>
-                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtEmpSort('FullName')">Full Name ${mgmtEmpSortCol === 'FullName' ? (mgmtEmpSortDir === 'asc' ? '↑' : '↓') : ''}</th>
-                <th style="padding: 16px;">Email</th>
-                <th style="padding: 16px;">Department ID</th>
-                <th style="padding: 16px;">Status</th>
-                <th style="text-align: right; padding: 16px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${displayData.length === 0 ? '<tr><td colspan="6" class="text-center" style="padding: 32px; color: var(--text-muted);">No employees found matching your criteria.</td></tr>' :
-                displayData.map(e => `
-                  <tr style="transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--bg-card-solid)'" onmouseout="this.style.backgroundColor='transparent'">
-                    <td class="mono" style="padding: 16px;">${e.EmployeeID}</td>
-                    <td style="font-weight: 600; padding: 16px;">${e.FullName}</td>
-                    <td style="padding: 16px; color: var(--text-secondary);">${e.Email || '—'}</td>
-                    <td style="padding: 16px;">${e.DepartmentID || '—'}</td>
-                    <td style="padding: 16px;"><span class="status-badge ${e.Status === 'Active' ? 'online' : 'offline'}" style="padding: 4px 10px; border-radius: 999px;">● ${e.Status || '—'}</span></td>
-                    <td style="text-align: right; padding: 16px;">
-                      <button class="secondary-btn btn-edit-emp" data-id="${e.EmployeeID}" style="padding: 8px; margin-right: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border);" title="Edit"><span style="width:16px;height:16px;color:var(--text-primary);">${ICONS.edit}</span></button>
-                      <button class="secondary-btn btn-del-emp" data-id="${e.EmployeeID}" style="padding: 8px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);" title="Delete"><span style="width:16px;height:16px;color:var(--danger);">${ICONS.trash}</span></button>
-                    </td>
+          <div class="table-wrapper" style="padding: 0; box-shadow: none; border-radius: 0;">
+            <div class="table-container" style="border-radius: 0; border: none;">
+              <table class="data-table" style="margin: 0; width: 100%;">
+                <thead class="table-header">
+                  <tr>
+                    <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtEmpSort('EmployeeID')">ID ${mgmtEmpSortCol === 'EmployeeID' ? (mgmtEmpSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                    <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtEmpSort('FullName')">Full Name ${mgmtEmpSortCol === 'FullName' ? (mgmtEmpSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                    <th style="padding: 16px;">Email</th>
+                    <th style="padding: 16px;">Department ID</th>
+                    <th style="padding: 16px;">Status</th>
+                    <th style="text-align: right; padding: 16px;">Actions</th>
                   </tr>
-                `).join('')
-              }
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  ${displayData.length === 0 ? '<tr><td colspan="6" class="text-center table-cell" style="padding: 32px; color: var(--text-muted);">No employees found matching your criteria.</td></tr>' :
+                    displayData.map(e => `
+                      <tr class="table-row">
+                        <td class="table-cell mono" style="padding: 16px; color: var(--accent-cyan);">${e.EmployeeID}</td>
+                        <td class="table-cell" style="font-weight: 600; padding: 16px; color: var(--text-primary);">${e.FullName}</td>
+                        <td class="table-cell" style="padding: 16px; color: var(--text-secondary);">${e.Email || '—'}</td>
+                        <td class="table-cell" style="padding: 16px;">${e.DepartmentID || '—'}</td>
+                        <td class="table-cell" style="padding: 16px;"><span class="status-badge ${e.Status === 'Active' ? 'online' : 'offline'}" style="padding: 4px 10px; border-radius: 999px;">● ${e.Status || '—'}</span></td>
+                        <td class="table-cell" style="text-align: right; padding: 16px;">
+                          <button class="btn-edit btn-edit-emp" data-id="${e.EmployeeID}" style="padding: 6px 12px; margin-right: 8px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;" title="Edit"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M19.045 7.401c.378-.378.586-.88.586-1.414s-.208-1.036-.586-1.414l-1.586-1.586c-.378-.378-.88-.586-1.414-.586s-1.036.208-1.413.585L4 13.585V18h4.413L19.045 7.401zm-3-3 1.587 1.585-1.59 1.584-1.586-1.585 1.589-1.584zM6 16v-1.585l7.04-7.018 1.586 1.586L7.587 16H6zm-2 4h16v2H4z"></path></svg></button>
+                          <button class="btn-delete btn-del-emp" data-id="${e.EmployeeID}" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;" title="Delete"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3zm1 2H6v12h12V8zm-4.586 6l1.768 1.768-1.414 1.414L12 15.414l-1.768 1.768-1.414-1.414L10.586 14l-1.768-1.768 1.414-1.414L12 12.586l1.768-1.768 1.414 1.414L13.414 14zM9 4v2h6V4H9z"></path></svg></button>
+                        </td>
+                      </tr>
+                    `).join('')
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -1427,51 +1439,55 @@ function renderManagement(): string {
     }
 
     contentHtml = `
-      <div class="card mt-6 fade-in" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-        <div class="card-header" style="background: var(--bg-card-solid); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 20px 24px;">
-          <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;"><span style="color: var(--success); width:20px;height:20px;">${ICONS.salary}</span> Payroll Records</h3>
+      <div class="card glass mt-6 fade-in" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(74,222,128,0.05), rgba(0,242,254,0.05)); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(74,222,128,0.1); padding: 20px 24px;">
+          <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;"><span style="color: var(--accent-green); width:20px;height:20px; filter: drop-shadow(0 0 4px rgba(74,222,128,0.5));">${ICONS.salary}</span> Payroll Records</h3>
           <div style="display: flex; gap: 12px; align-items: center;">
             <div class="search-container" style="position: relative;">
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 14px; height: 14px;">${ICONS.search}</span>
-              <input type="text" id="mgmt-sal-search" class="search-input" style="padding: 8px 12px 8px 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-primary); width: 200px; font-size: 13px;" placeholder="Search ID or Month..." value="${mgmtSalSearch}" oninput="window._mgmtSalSearch(this.value)">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--accent-cyan); opacity: 0.6; width: 14px; height: 14px;">${ICONS.search}</span>
+              <input type="text" id="mgmt-sal-search" class="cyber-input" style="padding: 8px 12px 8px 34px; border-radius: 999px; width: 200px; font-size: 13px;" placeholder="Search ID or Month..." value="${mgmtSalSearch}" oninput="window._mgmtSalSearch(this.value)">
             </div>
-            <button class="primary-btn" id="btn-add-sal" style="padding: 8px 16px; font-size: 13px; border-radius: 999px; background: linear-gradient(135deg, var(--success) 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); border: none;"><span style="width:14px;height:14px;margin-right:6px;">${ICONS.plus}</span> Add Salary</button>
+            <button class="btn-primary" id="btn-add-sal" style="padding: 8px 18px; font-size: 13px; border-radius: 999px;"><span style="width:14px;height:14px;margin-right:6px;">${ICONS.plus}</span> Add Salary</button>
           </div>
         </div>
         <div class="card-body" style="padding: 0; overflow-x: auto;">
-          <table class="data-table" style="margin: 0; width: 100%;">
-            <thead style="background: var(--bg-sidebar-solid);">
-              <tr>
-                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('SalaryID')">ID ${mgmtSalSortCol === 'SalaryID' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
-                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('EmployeeID')">Emp ID ${mgmtSalSortCol === 'EmployeeID' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
-                <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('SalaryMonth')">Month ${mgmtSalSortCol === 'SalaryMonth' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
-                <th style="text-align: right; padding: 16px;">Base</th>
-                <th style="text-align: right; padding: 16px;">Bonus</th>
-                <th style="text-align: right; padding: 16px;">Deductions</th>
-                <th style="text-align: right; padding: 16px; cursor: pointer;" onclick="window._mgmtSalSort('NetSalary')">Net ${mgmtSalSortCol === 'NetSalary' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
-                <th style="text-align: right; padding: 16px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${displayData.length === 0 ? '<tr><td colspan="8" class="text-center" style="padding: 32px; color: var(--text-muted);">No salaries found matching your criteria.</td></tr>' :
-                displayData.map(s => `
-                  <tr style="transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--bg-card-solid)'" onmouseout="this.style.backgroundColor='transparent'">
-                    <td class="mono" style="padding: 16px;">${s.SalaryID}</td>
-                    <td class="mono" style="font-weight: 600; padding: 16px;">${s.EmployeeID}</td>
-                    <td style="padding: 16px;">${s.SalaryMonth}</td>
-                    <td style="text-align: right; padding: 16px;">$${s.BaseSalary?.toLocaleString() || 0}</td>
-                    <td style="text-align: right; color: var(--success); padding: 16px;">$${s.Bonus?.toLocaleString() || 0}</td>
-                    <td style="text-align: right; color: var(--danger); padding: 16px;">-$${s.Deductions?.toLocaleString() || 0}</td>
-                    <td style="text-align: right; font-weight: 600; padding: 16px;">$${s.NetSalary?.toLocaleString() || 0}</td>
-                    <td style="text-align: right; padding: 16px;">
-                      <button class="secondary-btn btn-edit-sal" data-id="${s.SalaryID}" style="padding: 8px; margin-right: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border);" title="Edit"><span style="width:16px;height:16px;color:var(--text-primary);">${ICONS.edit}</span></button>
-                      <button class="secondary-btn btn-del-sal" data-id="${s.SalaryID}" style="padding: 8px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);" title="Delete"><span style="width:16px;height:16px;color:var(--danger);">${ICONS.trash}</span></button>
-                    </td>
+          <div class="table-wrapper" style="padding: 0; box-shadow: none; border-radius: 0;">
+            <div class="table-container" style="border-radius: 0; border: none;">
+              <table class="data-table" style="margin: 0; width: 100%;">
+                <thead class="table-header">
+                  <tr>
+                    <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('SalaryID')">ID ${mgmtSalSortCol === 'SalaryID' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                    <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('EmployeeID')">Emp ID ${mgmtSalSortCol === 'EmployeeID' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                    <th style="cursor: pointer; padding: 16px;" onclick="window._mgmtSalSort('SalaryMonth')">Month ${mgmtSalSortCol === 'SalaryMonth' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                    <th style="text-align: right; padding: 16px;">Base</th>
+                    <th style="text-align: right; padding: 16px;">Bonus</th>
+                    <th style="text-align: right; padding: 16px;">Deductions</th>
+                    <th style="text-align: right; padding: 16px; cursor: pointer;" onclick="window._mgmtSalSort('NetSalary')">Net ${mgmtSalSortCol === 'NetSalary' ? (mgmtSalSortDir === 'asc' ? '↑' : '↓') : ''}</th>
+                    <th style="text-align: right; padding: 16px;">Actions</th>
                   </tr>
-                `).join('')
-              }
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  ${displayData.length === 0 ? '<tr><td colspan="8" class="text-center table-cell" style="padding: 32px; color: var(--text-muted);">No salaries found matching your criteria.</td></tr>' :
+                    displayData.map(s => `
+                      <tr class="table-row">
+                        <td class="table-cell mono" style="padding: 16px; color: var(--accent-cyan);">${s.SalaryID}</td>
+                        <td class="table-cell mono" style="font-weight: 600; padding: 16px; color: var(--accent-cyan);">${s.EmployeeID}</td>
+                        <td class="table-cell" style="padding: 16px;">${s.SalaryMonth}</td>
+                        <td class="table-cell" style="text-align: right; padding: 16px;">$${s.BaseSalary?.toLocaleString() || 0}</td>
+                        <td class="table-cell" style="text-align: right; color: var(--accent-green); padding: 16px;">$${s.Bonus?.toLocaleString() || 0}</td>
+                        <td class="table-cell" style="text-align: right; color: var(--accent-red); padding: 16px;">-$${s.Deductions?.toLocaleString() || 0}</td>
+                        <td class="table-cell" style="text-align: right; font-weight: 600; padding: 16px;">$${s.NetSalary?.toLocaleString() || 0}</td>
+                        <td class="table-cell" style="text-align: right; padding: 16px;">
+                          <button class="btn-edit btn-edit-sal" data-id="${s.SalaryID}" style="padding: 6px 12px; margin-right: 8px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;" title="Edit"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M19.045 7.401c.378-.378.586-.88.586-1.414s-.208-1.036-.586-1.414l-1.586-1.586c-.378-.378-.88-.586-1.414-.586s-1.036.208-1.413.585L4 13.585V18h4.413L19.045 7.401zm-3-3 1.587 1.585-1.59 1.584-1.586-1.585 1.589-1.584zM6 16v-1.585l7.04-7.018 1.586 1.586L7.587 16H6zm-2 4h16v2H4z"></path></svg></button>
+                          <button class="btn-delete btn-del-sal" data-id="${s.SalaryID}" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;" title="Delete"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1.2em" width="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3zm1 2H6v12h12V8zm-4.586 6l1.768 1.768-1.414 1.414L12 15.414l-1.768 1.768-1.414-1.414L10.586 14l-1.768-1.768 1.414-1.414L12 12.586l1.768-1.768 1.414 1.414L13.414 14zM9 4v2h6V4H9z"></path></svg></button>
+                        </td>
+                      </tr>
+                    `).join('')
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -1480,22 +1496,22 @@ function renderManagement(): string {
   }
 
   return `
-    <div class="card" style="box-shadow: var(--shadow-md); border-radius: var(--radius-lg);">
-      <div class="card-header" style="background: var(--bg-card-solid); border-bottom: none; padding: 24px;">
+    <div class="card glass" style="box-shadow: 0 8px 32px rgba(0,0,0,0.3); border-radius: var(--radius-lg);">
+      <div class="card-header" style="background: linear-gradient(90deg, rgba(0,242,254,0.05), rgba(123,47,247,0.05)); border-bottom: 1px solid rgba(0,242,254,0.1); padding: 24px;">
         <div>
-          <h3 style="font-size: 20px; font-weight: 700;">Data Management Center</h3>
+          <h3 style="font-size: 20px; font-weight: 700;" class="glow-text2">Data Management Center</h3>
           <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">Add, update, and manage core HR and Payroll records with automated cross-database synchronization.</p>
         </div>
       </div>
       <div class="card-body" style="padding: 0 24px 24px 24px;">
-        <div style="display: flex; gap: 16px;">
+        <div style="display: flex; gap: 16px; margin-top: 24px; margin-bottom: 8px;">
           ${tabs.map(t => `
             <button class="mgmt-tab ${mgmtTab === t.id ? 'active' : ''}" data-tab="${t.id}" style="
               display: flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 999px;
-              border: 1px solid ${mgmtTab === t.id ? 'var(--accent)' : 'var(--border)'};
-              background: ${mgmtTab === t.id ? 'var(--accent-glow)' : 'var(--bg-card)'};
-              color: ${mgmtTab === t.id ? 'var(--accent)' : 'var(--text-primary)'};
-              font-weight: 600; cursor: pointer; transition: all var(--transition); box-shadow: ${mgmtTab === t.id ? 'var(--shadow-sm)' : 'none'};
+              border: 1px solid ${mgmtTab === t.id ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.08)'};
+              background: ${mgmtTab === t.id ? 'rgba(0,242,254,0.1)' : 'rgba(15,23,42,0.6)'};
+              color: ${mgmtTab === t.id ? 'var(--accent-cyan)' : 'var(--text-primary)'};
+              font-weight: 600; cursor: pointer; transition: all var(--transition); box-shadow: ${mgmtTab === t.id ? '0 0 15px rgba(0,242,254,0.15)' : 'none'};
             ">
               <span style="width:18px;height:18px;">${t.icon}</span> ${t.label}
             </button>
@@ -1511,64 +1527,64 @@ function renderManagement(): string {
 function renderEmpModal(): string {
   const isEdit = !!mgmtEmpForm.EmployeeID;
   return `
-    <div class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;">
-      <div class="card fade-in" style="width: 100%; max-width: 550px; background: var(--bg-primary); box-shadow: 0 24px 48px rgba(0,0,0,0.2); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border-accent);">
-        <div class="card-header" style="background: var(--gradient-header); padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+    <div class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;">
+      <div class="card glass fade-in" style="width: 100%; max-width: 550px; box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 30px rgba(0,242,254,0.08); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid rgba(0,242,254,0.15);">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(0,242,254,0.06), rgba(123,47,247,0.06)); padding: 24px; border-bottom: 1px solid rgba(0,242,254,0.1); display: flex; justify-content: space-between; align-items: center;">
           <h3 style="font-size: 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent-glow); color: var(--accent); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0,242,254,0.1); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0,242,254,0.2);">
                <span style="width: 18px; height: 18px;">${isEdit ? ICONS.edit : ICONS.plus}</span>
             </div>
             ${isEdit ? 'Edit Employee Profile' : 'Register New Employee'}
           </h3>
-          <button id="btn-close-emp" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'"><span style="width: 20px; height: 20px; display: block;">${ICONS.cancel}</span></button>
+          <button id="btn-close-emp" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,242,254,0.1)';this.style.color='var(--accent-cyan)'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'"><span style="width: 20px; height: 20px; display: block;">${ICONS.cancel}</span></button>
         </div>
         <div class="card-body" style="padding: 32px; max-height: 80vh; overflow-y: auto;">
           <form id="mgmt-emp-form" style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Full Name <span style="color:var(--danger)">*</span></label>
-              <input type="text" id="emp-FullName" class="auth-input" required value="${mgmtEmpForm.FullName || ''}" placeholder="e.g. John Doe" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; transition: border-color 0.2s;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Full Name <span style="color:var(--accent-red)">*</span></label>
+              <input type="text" id="emp-FullName" class="cyber-input" required value="${mgmtEmpForm.FullName || ''}" placeholder="e.g. John Doe" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Date of Birth <span style="color:var(--danger)">*</span></label>
-                <input type="date" id="emp-DateOfBirth" class="auth-input" required value="${mgmtEmpForm.DateOfBirth || ''}" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary);">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Date of Birth <span style="color:var(--accent-red)">*</span></label>
+                <input type="date" id="emp-DateOfBirth" class="cyber-input" required value="${mgmtEmpForm.DateOfBirth || ''}" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Hire Date <span style="color:var(--danger)">*</span></label>
-                <input type="date" id="emp-HireDate" class="auth-input" required value="${mgmtEmpForm.HireDate || new Date().toISOString().split('T')[0]}" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary);">
-              </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Email</label>
-                <input type="email" id="emp-Email" class="auth-input" value="${mgmtEmpForm.Email || ''}" placeholder="e.g. john@example.com" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Phone Number</label>
-                <input type="text" id="emp-PhoneNumber" class="auth-input" value="${mgmtEmpForm.PhoneNumber || ''}" placeholder="e.g. +1 234 567 890" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Hire Date <span style="color:var(--accent-red)">*</span></label>
+                <input type="date" id="emp-HireDate" class="cyber-input" required value="${mgmtEmpForm.HireDate || new Date().toISOString().split('T')[0]}" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
               </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Department ID</label>
-                <input type="number" id="emp-DepartmentID" class="auth-input" value="${mgmtEmpForm.DepartmentID || ''}" placeholder="e.g. 1" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Email</label>
+                <input type="email" id="emp-Email" class="cyber-input" value="${mgmtEmpForm.Email || ''}" placeholder="e.g. john@example.com" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Position ID</label>
-                <input type="number" id="emp-PositionID" class="auth-input" value="${mgmtEmpForm.PositionID || ''}" placeholder="e.g. 2" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Phone Number</label>
+                <input type="text" id="emp-PhoneNumber" class="cyber-input" value="${mgmtEmpForm.PhoneNumber || ''}" placeholder="e.g. +1 234 567 890" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Department ID</label>
+                <input type="number" id="emp-DepartmentID" class="cyber-input" value="${mgmtEmpForm.DepartmentID || ''}" placeholder="e.g. 1" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Position ID</label>
+                <input type="number" id="emp-PositionID" class="cyber-input" value="${mgmtEmpForm.PositionID || ''}" placeholder="e.g. 2" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Status</label>
-              <select id="emp-Status" class="auth-input" style="appearance: auto; border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary); cursor: pointer;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Status</label>
+              <select id="emp-Status" class="cyber-input" style="appearance: auto; border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px; cursor: pointer;">
                 <option value="Active" ${mgmtEmpForm.Status === 'Active' ? 'selected' : ''}>Active</option>
                 <option value="Inactive" ${mgmtEmpForm.Status === 'Inactive' ? 'selected' : ''}>Inactive</option>
                 <option value="Terminated" ${mgmtEmpForm.Status === 'Terminated' ? 'selected' : ''}>Terminated</option>
               </select>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
-              <button type="button" class="secondary-btn" id="btn-cancel-emp" style="padding: 12px 24px; border-radius: 999px; font-weight: 600;"><span style="width:16px;height:16px;margin-right:6px;vertical-align:text-bottom;">${ICONS.cancel}</span> Cancel</button>
-              <button type="submit" class="primary-btn" style="padding: 12px 32px; border-radius: 999px; font-weight: 600; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); box-shadow: 0 4px 16px var(--accent-glow); border: none;">
+            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(0,242,254,0.08);">
+              <button type="button" class="btn-delete" id="btn-cancel-emp" style="padding: 12px 24px; border-radius: 999px; font-weight: 600;"><span style="width:16px;height:16px;margin-right:6px;vertical-align:text-bottom;">${ICONS.cancel}</span> Cancel</button>
+              <button type="submit" class="btn-primary" style="padding: 12px 32px; border-radius: 999px; font-weight: 600;">
                  ${mgmtLoading ? '<div class="spinner" style="width:16px;height:16px;margin-right:8px;display:inline-block;"></div> Saving...' : `<span style="width:16px;height:16px;margin-right:8px;vertical-align:text-bottom;">${ICONS.save}</span> ${isEdit ? 'Save Changes' : 'Create Employee'}`}
               </button>
             </div>
@@ -1582,62 +1598,62 @@ function renderEmpModal(): string {
 function renderSalModal(): string {
   const isEdit = !!mgmtSalForm.SalaryID;
   return `
-    <div class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;">
-      <div class="card fade-in" style="width: 100%; max-width: 500px; background: var(--bg-primary); box-shadow: 0 24px 48px rgba(0,0,0,0.2); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.2);">
-        <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+    <div class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;">
+      <div class="card glass fade-in" style="width: 100%; max-width: 500px; box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 30px rgba(74,222,128,0.08); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid rgba(74,222,128,0.15);">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(74,222,128,0.06), rgba(0,242,254,0.06)); padding: 24px; border-bottom: 1px solid rgba(74,222,128,0.1); display: flex; justify-content: space-between; align-items: center;">
           <h3 style="font-size: 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(74,222,128,0.1); color: var(--accent-green); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(74,222,128,0.2);">
                <span style="width: 18px; height: 18px;">${isEdit ? ICONS.edit : ICONS.salary}</span>
             </div>
             ${isEdit ? 'Update Salary Record' : 'Add New Salary Record'}
           </h3>
-          <button id="btn-close-sal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'"><span style="width: 20px; height: 20px; display: block;">${ICONS.cancel}</span></button>
+          <button id="btn-close-sal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: all 0.2s;" onmouseover="this.style.background='rgba(74,222,128,0.1)';this.style.color='var(--accent-green)'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'"><span style="width: 20px; height: 20px; display: block;">${ICONS.cancel}</span></button>
         </div>
         <div class="card-body" style="padding: 32px;">
           <form id="mgmt-sal-form" style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Employee ID <span style="color:var(--danger)">*</span></label>
-              <input type="number" id="sal-EmployeeID" class="auth-input" required value="${mgmtSalForm.EmployeeID || ''}" ${isEdit ? 'readonly' : ''} placeholder="e.g. 1001" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: ${isEdit ? 'var(--bg-secondary)' : 'var(--bg-card-solid)'}; font-size: 14px; cursor: ${isEdit ? 'not-allowed' : 'text'};">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Employee ID <span style="color:var(--accent-red)">*</span></label>
+              <input type="number" id="sal-EmployeeID" class="cyber-input" required value="${mgmtSalForm.EmployeeID || ''}" ${isEdit ? 'readonly' : ''} placeholder="e.g. 1001" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px; ${isEdit ? 'opacity: 0.6; cursor: not-allowed;' : ''}">
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Salary Month <span style="color:var(--danger)">*</span></label>
-              <input type="date" id="sal-SalaryMonth" class="auth-input" required value="${mgmtSalForm.SalaryMonth || ''}" style="border-radius: var(--radius-md); padding: 12px 16px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; color: var(--text-primary);">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Salary Month <span style="color:var(--accent-red)">*</span></label>
+              <input type="date" id="sal-SalaryMonth" class="cyber-input" required value="${mgmtSalForm.SalaryMonth || ''}" style="border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px;">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Base Salary ($) <span style="color:var(--danger)">*</span></label>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Base Salary ($) <span style="color:var(--accent-red)">*</span></label>
                 <div style="position: relative;">
-                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600;">$</span>
-                  <input type="number" id="sal-BaseSalary" class="auth-input" required value="${mgmtSalForm.BaseSalary || ''}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--accent-cyan); font-weight: 600;">$</span>
+                  <input type="number" id="sal-BaseSalary" class="cyber-input" required value="${mgmtSalForm.BaseSalary || ''}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; font-size: 14px; width: 100%;">
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Bonus ($)</label>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Bonus ($)</label>
                 <div style="position: relative;">
-                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--success); font-weight: 600;">$</span>
-                  <input type="number" id="sal-Bonus" class="auth-input" value="${mgmtSalForm.Bonus || 0}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--accent-green); font-weight: 600;">$</span>
+                  <input type="number" id="sal-Bonus" class="cyber-input" value="${mgmtSalForm.Bonus || 0}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; font-size: 14px; width: 100%;">
                 </div>
               </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Deductions ($)</label>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Deductions ($)</label>
                 <div style="position: relative;">
-                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--danger); font-weight: 600;">$</span>
-                  <input type="number" id="sal-Deductions" class="auth-input" value="${mgmtSalForm.Deductions || 0}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--accent-red); font-weight: 600;">$</span>
+                  <input type="number" id="sal-Deductions" class="cyber-input" value="${mgmtSalForm.Deductions || 0}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; font-size: 14px; width: 100%;">
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Net Salary ($) <span style="color:var(--danger)">*</span></label>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Net Salary ($) <span style="color:var(--accent-red)">*</span></label>
                 <div style="position: relative;">
-                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-primary); font-weight: 600;">$</span>
-                  <input type="number" id="sal-NetSalary" class="auth-input" required value="${mgmtSalForm.NetSalary || ''}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; border: 1px solid var(--border-light); background: var(--bg-card-solid); font-size: 14px; width: 100%; font-weight: 700;">
+                  <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--accent-cyan); font-weight: 600;">$</span>
+                  <input type="number" id="sal-NetSalary" class="cyber-input" required value="${mgmtSalForm.NetSalary || ''}" placeholder="0.00" style="border-radius: var(--radius-md); padding: 12px 16px 12px 32px; font-size: 14px; width: 100%; font-weight: 700;">
                 </div>
               </div>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
-              <button type="button" class="secondary-btn" id="btn-cancel-sal" style="padding: 12px 24px; border-radius: 999px; font-weight: 600;"><span style="width:16px;height:16px;margin-right:6px;vertical-align:text-bottom;">${ICONS.cancel}</span> Cancel</button>
-              <button type="submit" class="primary-btn" style="padding: 12px 32px; border-radius: 999px; font-weight: 600; background: linear-gradient(135deg, var(--success) 0%, #059669 100%); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); border: none;">
+            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(74,222,128,0.08);">
+              <button type="button" class="btn-delete" id="btn-cancel-sal" style="padding: 12px 24px; border-radius: 999px; font-weight: 600;"><span style="width:16px;height:16px;margin-right:6px;vertical-align:text-bottom;">${ICONS.cancel}</span> Cancel</button>
+              <button type="submit" class="btn-primary" style="padding: 12px 32px; border-radius: 999px; font-weight: 600;">
                  ${mgmtLoading ? '<div class="spinner" style="width:16px;height:16px;margin-right:8px;display:inline-block;border-top-color:white;"></div> Saving...' : `<span style="width:16px;height:16px;margin-right:8px;vertical-align:text-bottom;">${ICONS.save}</span> ${isEdit ? 'Save Changes' : 'Add Salary'}`}
               </button>
             </div>
