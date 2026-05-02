@@ -352,7 +352,7 @@ function renderAuthPage(): string {
         </div>
         
         <div class="auth-hero-content">
-          <div class="auth-hero-logo">${ICONS.bolt} NexusBridge</div>
+          <div class="auth-hero-logo">${ICONS.bolt} <span class="glow-text">NexusBridge</span></div>
           <h1 class="auth-hero-title">Unified HR & Payroll Intelligence</h1>
           <p class="auth-hero-subtitle">Connect HR and Payroll data into one intelligent workspace.</p>
           
@@ -381,9 +381,9 @@ function renderAuthPage(): string {
 
       <!-- RIGHT AUTH PANEL -->
       <div class="auth-panel">
-        <div class="auth-card">
+        <div class="auth-card glass" style="padding: 40px; box-shadow: 0 0 25px rgba(0, 242, 254, 0.08), 0 10px 40px rgba(0, 0, 0, 0.4);">
           <div class="auth-header">
-            <h2 class="auth-title">Welcome back</h2>
+            <h2 class="auth-title glow-text2" style="font-size: 28px;">Welcome back</h2>
             <p class="auth-subtitle">Sign in to your account to continue</p>
           </div>
 
@@ -407,20 +407,20 @@ function renderLoginForm(): string {
   return `
     <form id="auth-form" class="auth-form" autocomplete="off" novalidate>
       <div class="auth-group">
-        <label class="auth-label" for="login-username">Username</label>
+        <label class="auth-label" for="login-username" style="color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;">Username</label>
         <div class="auth-input-wrap">
-          <input type="text" id="login-username" class="auth-input" placeholder="Enter username" autocomplete="username" />
+          <input type="text" id="login-username" class="auth-input cyber-input" placeholder="Enter username" autocomplete="username" />
         </div>
         <div class="auth-field-error" id="err-login-username" style="display: none;"></div>
       </div>
 
       <div class="auth-group">
         <div class="auth-label-row">
-          <label class="auth-label" for="login-password">Password</label>
-          <a href="#" class="auth-link-small" id="link-forgot-password">Forgot password?</a>
+          <label class="auth-label" for="login-password" style="color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;">Password</label>
+          <a href="#" class="auth-link-small" id="link-forgot-password" style="color: var(--accent-cyan); transition: all 0.2s;">Forgot password?</a>
         </div>
         <div class="auth-input-wrap">
-          <input type="password" id="login-password" class="auth-input" placeholder="Enter password" autocomplete="current-password" />
+          <input type="password" id="login-password" class="auth-input cyber-input" placeholder="Enter password" autocomplete="current-password" />
           <button type="button" class="auth-toggle-pwd" tabindex="-1">👁</button>
         </div>
         <div class="auth-field-error" id="err-login-password" style="display: none;"></div>
@@ -433,8 +433,8 @@ function renderLoginForm(): string {
         </label>
       </div>
 
-      <button type="submit" class="auth-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
-        ${authLoading ? '<span class="auth-spinner"></span>' : ''} ${authLoading ? 'Signing in...' : 'Sign in'}
+      <button type="submit" class="auth-btn btn-primary" id="auth-submit" style="width: 100%; padding: 16px; border-radius: 12px; font-size: 15px; letter-spacing: 2px;" ${authLoading ? 'disabled' : ''}>
+        ${authLoading ? '<span class="auth-spinner"></span>' : ''} ${authLoading ? 'SIGNING IN...' : 'SIGN IN'}
       </button>
     </form>
   `;
@@ -444,25 +444,25 @@ function renderRegisterForm(): string {
   return `
     <form id="auth-form" class="auth-form" autocomplete="off" novalidate>
       <div class="auth-group">
-        <label class="auth-label" for="reg-username">Username</label>
+        <label class="auth-label" for="reg-username" style="color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;">Username</label>
         <div class="auth-input-wrap">
-          <input type="text" id="reg-username" class="auth-input" placeholder="Choose a username" autocomplete="username" />
+          <input type="text" id="reg-username" class="auth-input cyber-input" placeholder="Choose a username" autocomplete="username" />
         </div>
         <div class="auth-field-error" id="err-reg-username" style="display: none;"></div>
       </div>
 
       <div class="auth-group">
-        <label class="auth-label" for="reg-email">Work Email</label>
+        <label class="auth-label" for="reg-email" style="color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;">Work Email</label>
         <div class="auth-input-wrap">
-          <input type="email" id="reg-email" class="auth-input" placeholder="name@company.com" autocomplete="email" />
+          <input type="email" id="reg-email" class="auth-input cyber-input" placeholder="name@company.com" autocomplete="email" />
         </div>
         <div class="auth-field-error" id="err-reg-email" style="display: none;"></div>
       </div>
 
       <div class="auth-group">
-        <label class="auth-label" for="reg-password">Password</label>
+        <label class="auth-label" for="reg-password" style="color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;">Password</label>
         <div class="auth-input-wrap">
-          <input type="password" id="reg-password" class="auth-input" placeholder="Create a password" autocomplete="new-password" />
+          <input type="password" id="reg-password" class="auth-input cyber-input" placeholder="Create a password" autocomplete="new-password" />
           <button type="button" class="auth-toggle-pwd" tabindex="-1">👁</button>
         </div>
         <div class="auth-field-error" id="err-reg-password" style="display: none;"></div>
@@ -476,15 +476,15 @@ function renderRegisterForm(): string {
       </div>
 
       <div class="auth-group">
-        <label class="auth-label" for="reg-confirm">Confirm Password</label>
+        <label class="auth-label" for="reg-confirm" style="color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;">Confirm Password</label>
         <div class="auth-input-wrap">
-          <input type="password" id="reg-confirm" class="auth-input" placeholder="Repeat password" autocomplete="new-password" />
+          <input type="password" id="reg-confirm" class="auth-input cyber-input" placeholder="Repeat password" autocomplete="new-password" />
         </div>
         <div class="auth-field-error" id="err-reg-confirm" style="display: none;"></div>
       </div>
 
-      <button type="submit" class="auth-btn" id="auth-submit" ${authLoading ? 'disabled' : ''}>
-        ${authLoading ? '<span class="auth-spinner"></span>' : ''} ${authLoading ? 'Creating account...' : 'Create Account'}
+      <button type="submit" class="auth-btn btn-primary" id="auth-submit" style="width: 100%; padding: 16px; border-radius: 12px; font-size: 15px; letter-spacing: 2px;" ${authLoading ? 'disabled' : ''}>
+        ${authLoading ? '<span class="auth-spinner"></span>' : ''} ${authLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
       </button>
 
       <p class="auth-terms">
@@ -633,7 +633,7 @@ function setAuthLoading(isLoading: boolean) {
   const btn = document.getElementById('auth-submit') as HTMLButtonElement;
   if (btn) {
     btn.disabled = isLoading;
-    btn.innerHTML = isLoading ? '<span class="auth-spinner"></span> ' + (authTab === 'login' ? 'Signing in...' : 'Creating account...') : (authTab === 'login' ? 'Sign in' : 'Create Account');
+    btn.innerHTML = isLoading ? '<span class="auth-spinner"></span> ' + (authTab === 'login' ? 'SIGNING IN...' : 'CREATING ACCOUNT...') : (authTab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT');
   }
 }
 

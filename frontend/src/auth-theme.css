@@ -311,16 +311,30 @@ body.auth-mode .auth-input-wrap {
 body.auth-mode .auth-input {
   width: 100%;
   padding: 16px;
-  background: var(--auth-input-bg);
-  border: 1px solid var(--auth-input-border);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   font-size: 15px;
-  color: var(--auth-text-main);
+  color: #f8fafc;
   transition: all 0.3s ease;
   box-sizing: border-box;
   font-family: inherit;
   box-shadow: none;
 }
+
+body.auth-mode .auth-input.cyber-input {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+body.auth-mode .auth-input.cyber-input:focus {
+  outline: none;
+  border-color: var(--accent-green, #4ade80);
+  box-shadow: 0 0 15px rgba(74, 222, 128, 0.3), 0 0 5px rgba(74, 222, 128, 0.15);
+  background: rgba(15, 23, 42, 1);
+}
+
 
 body.auth-mode .auth-input:focus {
   outline: none;
@@ -357,6 +371,17 @@ body.auth-mode .auth-field-error {
 
 body.auth-mode .auth-input::placeholder {
   color: #475569;
+}
+
+/* Override browser autofill styling */
+body.auth-mode .auth-input:-webkit-autofill,
+body.auth-mode .auth-input:-webkit-autofill:hover,
+body.auth-mode .auth-input:-webkit-autofill:focus,
+body.auth-mode .auth-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgba(15, 23, 42, 0.95) inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: #f8fafc;
 }
 
 /* Password Toggle */
