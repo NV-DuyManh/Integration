@@ -7,7 +7,7 @@ import logging
 from services.hr_service import HRService
 from services.payroll_service import PayrollService
 from core.database.sqlserver import test_sqlserver_connection
-from core.database.mysql import test_mysql_connection
+from core.database.mysql import test_mysql_connection, mysql_cursor
 
 logger = logging.getLogger(__name__)
 
@@ -156,26 +156,29 @@ class DashboardService:
             }
             
         elif report_type == "department":
-            hr_emps = self.hr.repo.get_all_employees()
-            dept_totals = {}
-            for e in hr_emps:
-                dept = e.get("DepartmentName") or "Unknown"
-                if dept not in dept_totals:
-                    dept_totals[dept] = {"Employees": 0, "TotalBaseSalary": 0, "TotalNetSalary": 0}
-                
-                dept_totals[dept]["Employees"] += 1
-                p = self.payroll.repo.get_employee_payroll(e["EmployeeID"])
-                if p:
-                    dept_totals[dept]["TotalBaseSalary"] += p.get("BaseSalary", 0)
-                    dept_totals[dept]["TotalNetSalary"] += p.get("NetSalary", 0)
+            with mysql_cursor() as cur:
+                cur.execute("""
+                    SELECT 
+                        d.DepartmentName AS Department,
+                        COUNT(DISTINCT e.EmployeeID) AS `Employee Count`,
+                        COALESCE(SUM(s.BaseSalary), 0) AS `Total Base Salary`,
+                        COALESCE(SUM(s.NetSalary), 0) AS `Total Net Salary`
+                    FROM departments_payroll d
+                    LEFT JOIN employees_payroll e ON d.DepartmentID = e.DepartmentID
+                    LEFT JOIN salaries s ON e.EmployeeID = s.EmployeeID
+                    GROUP BY d.DepartmentID, d.DepartmentName
+                    HAVING COUNT(DISTINCT e.EmployeeID) > 0
+                    ORDER BY `Total Net Salary` DESC
+                """)
+                rows = cur.fetchall()
             
             report_data = []
-            for d, stats in dept_totals.items():
+            for r in rows:
                 report_data.append({
-                    "Department": d,
-                    "Employee Count": stats["Employees"],
-                    "Total Base Salary": f"${stats['TotalBaseSalary']:,}",
-                    "Total Net Salary": f"${stats['TotalNetSalary']:,}"
+                    "Department": r["Department"],
+                    "Employee Count": r["Employee Count"],
+                    "Total Base Salary": f"${r['Total Base Salary']:,.0f}",
+                    "Total Net Salary": f"${r['Total Net Salary']:,.0f}",
                 })
             return {"title": "Department Payroll Report", "data": report_data}
             
