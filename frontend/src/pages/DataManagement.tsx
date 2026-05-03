@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload } from 'react-icons/fi';
 import { api } from '../api';
+import { exportToExcel } from '../utils/exportUtils';
 
 export default function DataManagement() {
   const [tab, setTab] = useState<'employees'|'salaries'>('employees');
@@ -91,6 +92,7 @@ export default function DataManagement() {
                 <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-cyan)', opacity: 0.6 }} size={14} />
                 <input className="cyber-input" placeholder="Search employees..." value={empSearch} onChange={e => setEmpSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
+              <button className="secondary-btn" onClick={() => exportToExcel(dispEmp, 'Employees_Export.xlsx')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999 }}><FiDownload size={14} /> Export</button>
               <button className="btn-primary" onClick={openAddEmp} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Employee</button>
             </div>
           </div>
@@ -131,6 +133,7 @@ export default function DataManagement() {
                 <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-cyan)', opacity: 0.6 }} size={14} />
                 <input className="cyber-input" placeholder="Search ID or Month..." value={salSearch} onChange={e => setSalSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
+              <button className="secondary-btn" onClick={() => exportToExcel(dispSal, 'Salaries_Export.xlsx')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999 }}><FiDownload size={14} /> Export</button>
               <button className="btn-primary" onClick={openAddSal} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Salary</button>
             </div>
           </div>

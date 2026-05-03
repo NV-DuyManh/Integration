@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { FiDownload } from 'react-icons/fi';
 import { api } from '../api';
+import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 
 const REPORT_TYPES = [
   { id: 'compensation', label: 'Employee Compensation', desc: 'Detailed salary and benefits extract' },
@@ -81,9 +83,19 @@ export default function Reports() {
               <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}><strong style={{ color: 'var(--text-primary)' }}>{displayData.length}</strong> Records</p>
             </div>
           </div>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(0,242,254,0.08)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(0,242,254,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
             <input className="cyber-input" placeholder="Search report data..." value={search} onChange={e => setSearch(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', width: 300, fontSize: 13 }} />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, fontSize: 13 }}
+                onClick={() => exportToExcel(displayData, `${reportData?.title || 'Report'}.xlsx`)}>
+                <FiDownload size={14} /> Export Excel
+              </button>
+              <button className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, fontSize: 13 }}
+                onClick={() => exportToPDF(displayData, reportData?.title || 'Report', `${reportData?.title || 'Report'}.pdf`)}>
+                <FiDownload size={14} /> Export PDF
+              </button>
+            </div>
           </div>
           <div className="card-body" style={{ padding: 0, overflow: 'auto', maxHeight: 600 }}>
             <table className="data-table" style={{ width: '100%' }}>
