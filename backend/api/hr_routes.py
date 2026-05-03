@@ -56,3 +56,16 @@ async def delete_employee(emp_id: int):
         return integration_service.delete_employee(emp_id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/employees/orphan")
+async def add_orphan_employee(employee_data: dict = Body(...)):
+    """[TEST ONLY] Create an orphan employee in HR DB only (no payroll sync).
+    
+    This intentionally bypasses the sync flow to create a reconciliation
+    anomaly that can be detected by the dashboard's reconciliation checks.
+    """
+    try:
+        return integration_service.add_orphan_employee(employee_data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

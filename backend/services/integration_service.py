@@ -110,36 +110,41 @@ class IntegrationService:
 
     def delete_employee(self, emp_id: int):
         """
-        Delete an employee if they don't have salary or dividend records.
-        Removes from both tables.
+        Delete an employee and all dependent records across both databases.
+        Cascading order:
+          MySQL:  salaries → attendance → employees_payroll
+          SQL Server:  Dividends → Employees
         """
         with cross_db_transaction() as (sql_cur, mysql_cur):
-            # Check for dividends in HR DB
-            sql_cur.execute("SELECT COUNT(*) FROM dbo.Dividends WHERE EmployeeID = ?", (emp_id,))
-            if sql_cur.fetchone()[0] > 0:
-                raise ValueError("Cannot delete employee with existing dividend records")
-                
-            # Check for salaries in Payroll DB
-            mysql_cur.execute("SELECT COUNT(*) AS cnt FROM salaries WHERE EmployeeID = %s", (emp_id,))
-            if mysql_cur.fetchone()['cnt'] > 0:
-                raise ValueError("Cannot delete employee with existing salary records")
-                
-            # Delete from Payroll DB first (child/dependent)
+            # ── MySQL: cascade-delete child records ──────────────
+            mysql_cur.execute("DELETE FROM salaries WHERE EmployeeID = %s", (emp_id,))
+            sal_deleted = mysql_cur.rowcount
+
+            mysql_cur.execute("DELETE FROM attendance WHERE EmployeeID = %s", (emp_id,))
+            att_deleted = mysql_cur.rowcount
+
             mysql_cur.execute("DELETE FROM employees_payroll WHERE EmployeeID = %s", (emp_id,))
-            
-            # Delete from HR DB
+
+            # ── SQL Server: cascade-delete child records ─────────
+            sql_cur.execute("DELETE FROM dbo.Dividends WHERE EmployeeID = ?", (emp_id,))
+            div_deleted = sql_cur.rowcount
+
             sql_cur.execute("DELETE FROM dbo.Employees WHERE EmployeeID = ?", (emp_id,))
             if sql_cur.rowcount == 0:
                 raise ValueError(f"Employee {emp_id} not found in HUMAN_2025")
-                
+
+            details = f"Deleted EmployeeID {emp_id}"
+            if sal_deleted or att_deleted or div_deleted:
+                details += f" (cascade: {sal_deleted} salaries, {att_deleted} attendance, {div_deleted} dividends)"
+
             TransactionService.log_transaction(
                 action="DELETE",
                 target_db="BOTH",
                 table="Employees",
-                details=f"Deleted EmployeeID {emp_id}"
+                details=details,
             )
-            
-            return {"message": "Employee deleted successfully"}
+
+            return {"message": f"Employee {emp_id} and all related records deleted successfully"}
 
     def add_salary(self, salary_data: dict) -> dict:
         """
@@ -230,3 +235,41 @@ class IntegrationService:
             )
             
             return {"message": "Salary deleted successfully"}
+
+    def add_orphan_employee(self, employee_data: dict) -> dict:
+        """Intentionally create an orphan record in HR only for testing.
+        
+        This bypasses the normal sync flow to create a record that exists
+        in SQL Server (HUMAN_2025) but NOT in MySQL (PAYROLL_2026),
+        triggering reconciliation alerts on the dashboard.
+        """
+        from core.database.sqlserver import get_sqlserver_connection
+        conn = get_sqlserver_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                INSERT INTO dbo.Employees 
+                (FullName, DateOfBirth, HireDate, Status, CreatedAt, UpdatedAt)
+                OUTPUT INSERTED.EmployeeID
+                VALUES (?, ?, ?, ?, GETDATE(), GETDATE())
+            """, (
+                employee_data['FullName'],
+                employee_data['DateOfBirth'],
+                employee_data['HireDate'],
+                employee_data.get('Status', 'Active')
+            ))
+            emp_id = cur.fetchone()[0]
+            conn.commit()
+
+            TransactionService.log_transaction(
+                action="TEST_ANOMALY",
+                target_db="HUMAN_2025",
+                table="Employees",
+                details=f"Created ORPHAN EmployeeID {emp_id} (intentionally not synced to PAYROLL_2026)"
+            )
+            return {**employee_data, "EmployeeID": emp_id}
+        except Exception as e:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()

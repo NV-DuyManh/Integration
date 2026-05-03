@@ -164,6 +164,7 @@ export const api = {
   addEmployee: (data: any) => postApi<any>('/api/hr/employees', data),
   updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}`, data),
   deleteEmployee: (id: number) => deleteApi<any>(`/api/hr/employees/${id}`),
+  addOrphanEmployee: (data: any) => postApi<any>('/api/hr/employees/orphan', data),
   addSalary: (data: any) => postApi<any>('/api/payroll/salaries', data),
   updateSalary: (id: number, data: any) => putApi<any>(`/api/payroll/salaries/${id}`, data),
   deleteSalary: (id: number) => deleteApi<any>(`/api/payroll/salaries/${id}`),

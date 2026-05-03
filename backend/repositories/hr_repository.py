@@ -28,6 +28,7 @@ class HRRepository:
                 SELECT TABLE_SCHEMA, TABLE_NAME
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_TYPE = 'BASE TABLE'
+                  AND TABLE_NAME != 'sysdiagrams'
                 ORDER BY TABLE_SCHEMA, TABLE_NAME
             """)
             columns = [desc[0] for desc in cur.description]

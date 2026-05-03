@@ -25,6 +25,16 @@ export default function Employee360() {
   const hr = result?.hr;
   const pr = result?.payroll;
 
+  const getStatusClass = (status: string) => {
+    if (!status) return 'status-danger';
+    const s = status.toLowerCase();
+    if (s.includes('đang làm việc') || s.includes('active')) return 'status-success';
+    if (s.includes('thử việc')) return 'status-info';
+    if (s.includes('thực tập')) return 'status-warning';
+    if (s.includes('nghỉ phép') || s.includes('inactive') || s.includes('terminated')) return 'status-danger';
+    return 'status-danger';
+  };
+
   return (
     <>
       {/* Search Hero */}
@@ -78,7 +88,7 @@ export default function Employee360() {
                 <div className="detail-item"><span>Hire Date</span><strong>{hr.HireDate || '—'}</strong></div>
                 <div className="detail-item"><span>Email</span><strong>{hr.Email || '—'}</strong></div>
                 <div className="detail-item"><span>Phone</span><strong>{hr.PhoneNumber || '—'}</strong></div>
-                <div className="detail-item"><span>Status</span><span className={`status-badge ${hr.Status === 'Active' ? 'online' : 'offline'}`}>● {hr.Status || '—'}</span></div>
+                <div className="detail-item"><span>Status</span><span className={`status-badge ${getStatusClass(hr.Status)}`}>● {hr.Status || '—'}</span></div>
               </div>
             </div>
 

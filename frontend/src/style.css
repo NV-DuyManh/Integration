@@ -783,26 +783,29 @@ body::before {
 }
 
 .data-table th {
-  text-align: left;
+  text-align: center !important;
   padding: 14px 20px;
   font-weight: 700;
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em;
   color: var(--text-primary);
   border-bottom: 2px solid var(--border-light);
   background: var(--bg-card-solid);
   position: sticky;
   top: 0;
   z-index: 10;
+  vertical-align: middle;
 }
 
 .data-table td {
+  text-align: center !important;
   padding: 14px 20px;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
   transition: all var(--transition);
   background: transparent;
+  vertical-align: middle;
 }
 
 .data-table tr:last-child td { border-bottom: none; }
@@ -851,6 +854,47 @@ body::before {
   background: var(--warning-bg);
   color: var(--warning);
   border: 1px solid rgba(251,191,36,0.2);
+}
+
+/* Vietnamese status variants — bold solid badges */
+.status-badge.status-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  border: 1px solid rgba(34,197,94,0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(34,197,94,0.25);
+}
+
+.status-badge.status-info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  border: 1px solid rgba(59,130,246,0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(59,130,246,0.25);
+}
+
+.status-badge.status-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: 1px solid rgba(245,158,11,0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(245,158,11,0.25);
+}
+
+.status-badge.status-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border: 1px solid rgba(239,68,68,0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.25);
+}
+
+.status-badge.status-default {
+  background: linear-gradient(135deg, #64748b, #475569);
+  color: #fff;
+  border: 1px solid rgba(100,116,139,0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(100,116,139,0.2);
 }
 
 /* ── Loading Skeleton ──────────────────────────────────────────── */

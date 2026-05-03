@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload, FiAlertTriangle } from 'react-icons/fi';
 import { api } from '../api';
 import { exportToExcel } from '../utils/exportUtils';
 
@@ -12,7 +12,9 @@ export default function DataManagement() {
   const [loading, setLoading] = useState(false);
   const [empModal, setEmpModal] = useState(false);
   const [salModal, setSalModal] = useState(false);
+  const [orphanModal, setOrphanModal] = useState(false);
   const [empForm, setEmpForm] = useState<any>({});
+  const [orphanForm, setOrphanForm] = useState<any>({ FullName: '', DateOfBirth: '', HireDate: new Date().toISOString().split('T')[0], Status: 'Active' });
   const [salForm, setSalForm] = useState<any>({});
 
   const loadData = async () => {
@@ -25,7 +27,7 @@ export default function DataManagement() {
   useEffect(() => { loadData(); }, []);
 
   // Employee CRUD
-  const openAddEmp = () => { setEmpForm({ FullName:'', DateOfBirth:'', HireDate: new Date().toISOString().split('T')[0], Email:'', PhoneNumber:'', DepartmentID:'', PositionID:'', Status:'Active' }); setEmpModal(true); };
+  const openAddEmp = () => { setEmpForm({ FullName:'', DateOfBirth:'', HireDate: new Date().toISOString().split('T')[0], Email:'', PhoneNumber:'', DepartmentID:'', PositionID:'', Status:'Đang làm việc' }); setEmpModal(true); };
   const openEditEmp = (e: any) => { setEmpForm({ ...e }); setEmpModal(true); };
   const saveEmp = async (ev: React.FormEvent) => {
     ev.preventDefault(); setLoading(true);
@@ -37,16 +39,34 @@ export default function DataManagement() {
   const delEmp = async (id: number) => { if (!confirm('Delete this employee?')) return; await api.deleteEmployee(id); await loadData(); };
 
   // Salary CRUD
-  const openAddSal = () => { setSalForm({ EmployeeID:'', SalaryMonth:'', BaseSalary:'', Bonus:0, Deductions:0, NetSalary:'' }); setSalModal(true); };
+  // Helper: compute net salary
+  const calcNet = (base: any, bonus: any, deductions: any) => (Number(base) || 0) + (Number(bonus) || 0) - (Number(deductions) || 0);
+
+  const openAddSal = () => { setSalForm({ EmployeeID:'', SalaryMonth:'', BaseSalary:'', Bonus:0, Deductions:0 }); setSalModal(true); };
   const openEditSal = (s: any) => { setSalForm({ ...s }); setSalModal(true); };
+  const updateSalField = (field: string, value: any) => {
+    setSalForm((prev: any) => ({ ...prev, [field]: value }));
+  };
   const saveSal = async (ev: React.FormEvent) => {
     ev.preventDefault(); setLoading(true);
-    const d = { EmployeeID: Number(salForm.EmployeeID), SalaryMonth: salForm.SalaryMonth, BaseSalary: Number(salForm.BaseSalary), Bonus: Number(salForm.Bonus)||0, Deductions: Number(salForm.Deductions)||0, NetSalary: Number(salForm.NetSalary) };
+    const net = calcNet(salForm.BaseSalary, salForm.Bonus, salForm.Deductions);
+    const d = { EmployeeID: Number(salForm.EmployeeID), SalaryMonth: salForm.SalaryMonth, BaseSalary: Number(salForm.BaseSalary), Bonus: Number(salForm.Bonus)||0, Deductions: Number(salForm.Deductions)||0, NetSalary: net };
     if (salForm.SalaryID) await api.updateSalary(salForm.SalaryID, d);
     else await api.addSalary(d);
     setSalModal(false); await loadData();
   };
   const delSal = async (id: number) => { if (!confirm('Delete this salary record?')) return; await api.deleteSalary(id); await loadData(); };
+
+  // Orphan employee injection for demo
+  const injectOrphan = async (ev: React.FormEvent) => {
+    ev.preventDefault(); setLoading(true);
+    try {
+      const res = await api.addOrphanEmployee(orphanForm);
+      if (res.error) { alert('Error: ' + res.error); }
+      else { alert(`✅ Orphan Employee created (ID: ${(res.data as any)?.EmployeeID}). Check Reconciliation to see the anomaly!`); setOrphanModal(false); await loadData(); }
+    } catch (e: any) { alert('Failed: ' + e.message); }
+    setLoading(false);
+  };
 
   // Filter
   let dispEmp = employees;
@@ -56,6 +76,16 @@ export default function DataManagement() {
 
   const labelStyle = { fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '1.5px' };
   const inputStyle = { borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: 14 };
+
+  const getStatusClass = (status: string) => {
+    if (!status) return 'status-danger';
+    const s = status.toLowerCase();
+    if (s.includes('đang làm việc') || s.includes('active')) return 'status-success';
+    if (s.includes('thử việc')) return 'status-info';
+    if (s.includes('thực tập')) return 'status-warning';
+    if (s.includes('nghỉ phép') || s.includes('inactive') || s.includes('terminated')) return 'status-danger';
+    return 'status-danger';
+  };
 
   return (
     <>
@@ -93,6 +123,11 @@ export default function DataManagement() {
                 <input className="cyber-input" placeholder="Search employees..." value={empSearch} onChange={e => setEmpSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
               <button className="secondary-btn" onClick={() => exportToExcel(dispEmp, 'Employees_Export.xlsx')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999 }}><FiDownload size={14} /> Export</button>
+              <button onClick={() => { setOrphanForm({ FullName: '', DateOfBirth: '', HireDate: new Date().toISOString().split('T')[0], Status: 'Active' }); setOrphanModal(true); }} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999,
+                border: '1px solid rgba(255,107,107,0.4)', background: 'rgba(255,107,107,0.08)',
+                color: '#ff6b6b', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+              }}><FiAlertTriangle size={14} /> Inject Sync Error</button>
               <button className="btn-primary" onClick={openAddEmp} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Employee</button>
             </div>
           </div>
@@ -110,7 +145,7 @@ export default function DataManagement() {
                       <td className="table-cell" style={{ fontWeight: 600, padding: 16 }}>{e.FullName}</td>
                       <td className="table-cell" style={{ padding: 16, color: 'var(--text-secondary)' }}>{e.Email || '—'}</td>
                       <td className="table-cell" style={{ padding: 16 }}>{e.DepartmentID || '—'}</td>
-                      <td className="table-cell" style={{ padding: 16 }}><span className={`status-badge ${e.Status === 'Active' ? 'online' : 'offline'}`}>● {e.Status || '—'}</span></td>
+                      <td className="table-cell" style={{ padding: 16 }}><span className={`status-badge ${getStatusClass(e.Status)}`}>● {e.Status || '—'}</span></td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: 16 }}>
                         <button className="btn-edit" onClick={() => openEditEmp(e)} style={{ padding: '6px 12px', marginRight: 8, borderRadius: 8 }} title="Edit"><FiEdit size={14} /></button>
                         <button className="btn-delete" onClick={() => delEmp(e.EmployeeID)} style={{ padding: '6px 12px', borderRadius: 8 }} title="Delete"><FiTrash2 size={14} /></button>
@@ -199,8 +234,8 @@ export default function DataManagement() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <label style={labelStyle}>Status</label>
-                  <select className="cyber-input" value={empForm.Status||'Active'} onChange={e => setEmpForm({...empForm, Status: e.target.value})} style={{...inputStyle, appearance: 'auto' as any, cursor: 'pointer'}}>
-                    <option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Terminated">Terminated</option>
+                  <select className="cyber-input" value={empForm.Status||'Đang làm việc'} onChange={e => setEmpForm({...empForm, Status: e.target.value})} style={{...inputStyle, appearance: 'auto' as any, cursor: 'pointer'}}>
+                    <option value="Đang làm việc">Đang làm việc</option><option value="Thử việc">Thử việc</option><option value="Thực tập">Thực tập</option><option value="Nghỉ phép">Nghỉ phép</option>
                   </select>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(0,242,254,0.08)' }}>
@@ -229,16 +264,60 @@ export default function DataManagement() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Employee ID *</label><input type="number" className="cyber-input" required value={salForm.EmployeeID||''} readOnly={!!salForm.SalaryID} onChange={e => setSalForm({...salForm, EmployeeID: e.target.value})} style={{...inputStyle, ...(salForm.SalaryID ? {opacity:0.6, cursor:'not-allowed'}:{})}} /></div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Salary Month *</label><input type="date" className="cyber-input" required value={salForm.SalaryMonth||''} onChange={e => setSalForm({...salForm, SalaryMonth: e.target.value})} style={inputStyle} /></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Base Salary ($) *</label><input type="number" className="cyber-input" required value={salForm.BaseSalary||''} onChange={e => setSalForm({...salForm, BaseSalary: e.target.value})} style={inputStyle} /></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Bonus ($)</label><input type="number" className="cyber-input" value={salForm.Bonus||0} onChange={e => setSalForm({...salForm, Bonus: e.target.value})} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Base Salary ($) *</label><input type="number" className="cyber-input" required value={salForm.BaseSalary||''} onChange={e => updateSalField('BaseSalary', e.target.value)} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Bonus ($)</label><input type="number" className="cyber-input" value={salForm.Bonus||0} onChange={e => updateSalField('Bonus', e.target.value)} style={inputStyle} /></div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Deductions ($)</label><input type="number" className="cyber-input" value={salForm.Deductions||0} onChange={e => setSalForm({...salForm, Deductions: e.target.value})} style={inputStyle} /></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Net Salary ($) *</label><input type="number" className="cyber-input" required value={salForm.NetSalary||''} onChange={e => setSalForm({...salForm, NetSalary: e.target.value})} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Deductions ($)</label><input type="number" className="cyber-input" value={salForm.Deductions||0} onChange={e => updateSalField('Deductions', e.target.value)} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={labelStyle}>Net Salary ($) <span style={{ color: 'var(--accent-cyan)', fontWeight: 400, fontSize: 10, letterSpacing: '0.5px' }}></span></label>
+                    <input type="number" className="cyber-input" readOnly value={calcNet(salForm.BaseSalary, salForm.Bonus, salForm.Deductions)} style={{...inputStyle, opacity: 0.7, cursor: 'not-allowed', background: 'rgba(0,242,254,0.04)', borderColor: 'rgba(0,242,254,0.15)' }} />
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>= Base + Bonus − Deductions</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(74,222,128,0.08)' }}>
                   <button type="button" className="btn-delete" onClick={() => setSalModal(false)} style={{ padding: '12px 24px', borderRadius: 999 }}><FiX style={{ marginRight: 6 }} /> Cancel</button>
                   <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '12px 32px', borderRadius: 999 }}><FiSave style={{ marginRight: 6 }} /> {salForm.SalaryID ? 'Save Changes' : 'Add Salary'}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Orphan Employee Modal (Inject Sync Error) */}
+      {orphanModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="card glass fade-in" style={{ width: '100%', maxWidth: 480, borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid rgba(255,107,107,0.25)' }}>
+            <div className="card-header" style={{ background: 'linear-gradient(90deg, rgba(255,107,107,0.08), rgba(255,165,0,0.06))', padding: 24, borderBottom: '1px solid rgba(255,107,107,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,107,107,0.12)', color: '#ff6b6b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FiAlertTriangle /></div>
+                Inject Sync Error
+              </h3>
+              <button onClick={() => setOrphanModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><FiX size={20} /></button>
+            </div>
+            <div className="card-body" style={{ padding: 32 }}>
+              <div style={{ background: 'rgba(255,107,107,0.06)', border: '1px solid rgba(255,107,107,0.15)', borderRadius: 'var(--radius-md)', padding: 16, marginBottom: 24, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <strong style={{ color: '#ff6b6b' }}>⚠ Demo Purpose Only</strong><br />
+                This creates an employee in <strong>SQL Server (HR)</strong> only, without syncing to <strong>MySQL (Payroll)</strong>. The orphan record will trigger a <strong>Reconciliation Alert</strong> on the dashboard.
+              </div>
+              <form onSubmit={injectOrphan} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={labelStyle}>Full Name *</label>
+                  <input className="cyber-input" required value={orphanForm.FullName} onChange={e => setOrphanForm({...orphanForm, FullName: e.target.value})} style={inputStyle} placeholder="e.g. Ghost Employee" />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Date of Birth *</label><input type="date" className="cyber-input" required value={orphanForm.DateOfBirth} onChange={e => setOrphanForm({...orphanForm, DateOfBirth: e.target.value})} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Hire Date *</label><input type="date" className="cyber-input" required value={orphanForm.HireDate} onChange={e => setOrphanForm({...orphanForm, HireDate: e.target.value})} style={inputStyle} /></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(255,107,107,0.08)' }}>
+                  <button type="button" className="btn-delete" onClick={() => setOrphanModal(false)} style={{ padding: '12px 24px', borderRadius: 999 }}><FiX style={{ marginRight: 6 }} /> Cancel</button>
+                  <button type="submit" disabled={loading} style={{
+                    padding: '12px 28px', borderRadius: 999, border: '1px solid rgba(255,107,107,0.5)',
+                    background: 'linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,165,0,0.1))',
+                    color: '#ff6b6b', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                    transition: 'all 0.2s', fontSize: 14,
+                  }}><FiAlertTriangle /> Inject Orphan Record</button>
                 </div>
               </form>
             </div>
