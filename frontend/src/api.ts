@@ -49,6 +49,48 @@ async function postApi<T>(endpoint: string, body: unknown): Promise<ApiResponse<
   }
 }
 
+async function putApi<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
+  try {
+    const resp = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      try {
+        const errJson = await resp.json();
+        return { data: null, error: `${resp.status}: ${errJson.detail || JSON.stringify(errJson)}` };
+      } catch {
+        return { data: null, error: `${resp.status}: ${await resp.text()}` };
+      }
+    }
+    const data = await resp.json();
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: `Network error: ${err}` };
+  }
+}
+
+async function deleteApi<T>(endpoint: string): Promise<ApiResponse<T>> {
+  try {
+    const resp = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'DELETE',
+    });
+    if (!resp.ok) {
+      try {
+        const errJson = await resp.json();
+        return { data: null, error: `${resp.status}: ${errJson.detail || JSON.stringify(errJson)}` };
+      } catch {
+        return { data: null, error: `${resp.status}: ${await resp.text()}` };
+      }
+    }
+    const data = await resp.json();
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: `Network error: ${err}` };
+  }
+}
+
 // ── Type Definitions ────────────────────────────────────────────
 
 export interface HealthResponse {
@@ -117,6 +159,22 @@ export const api = {
   getReconciliation: () => fetchApi<any>('/api/dashboard/reconciliation'),
   getDataQuality: () => fetchApi<any>('/api/dashboard/quality'),
   getReport: (type: string) => fetchApi<any>(`/api/dashboard/reports/${type}`),
+
+  // Management endpoints
+  addEmployee: (data: any) => postApi<any>('/api/hr/employees', data),
+  updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}`, data),
+  deleteEmployee: (id: number) => deleteApi<any>(`/api/hr/employees/${id}`),
+  addOrphanEmployee: (data: any) => postApi<any>('/api/hr/employees/orphan', data),
+  addSalary: (data: any) => postApi<any>('/api/payroll/salaries', data),
+  updateSalary: (id: number, data: any) => putApi<any>(`/api/payroll/salaries/${id}`, data),
+  deleteSalary: (id: number) => deleteApi<any>(`/api/payroll/salaries/${id}`),
+
+  // Raw Data Fetch
+  getHrTableData: (table: string, limit = 100) => fetchApi<any>(`/api/hr/tables/${table}?limit=${limit}`),
+  getPayrollTableData: (table: string, limit = 100) => fetchApi<any>(`/api/payroll/tables/${table}?limit=${limit}`),
+  getEmployeesWithNames: () => fetchApi<any>('/api/hr/employees'),
+  getDepartments: () => fetchApi<any>('/api/hr/departments'),
+  getPositions: () => fetchApi<any>('/api/hr/positions'),
 
   // Auth
   register: (data: RegisterRequest) => postApi<AuthResponse>('/api/auth/register', data),

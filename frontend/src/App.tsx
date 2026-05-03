@@ -1,0 +1,91 @@
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './components/MainLayout';
+import AuthPage from './pages/AuthPage';
+import Dashboard from './pages/Dashboard';
+import Employee360 from './pages/Employee360';
+import Reconciliation from './pages/Reconciliation';
+import Reports from './pages/Reports';
+import DataManagement from './pages/DataManagement';
+import ApiExplorer from './pages/ApiExplorer';
+import Settings from './pages/Settings';
+import type { AuthResponse } from './api';
+
+export default function App() {
+  /* ── Auth state ─────────────────────────────────────────────────── */
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem('auth_token')
+  );
+  const [user, setUser] = useState<{ username: string; role: string; email: string } | null>(
+    () => {
+      const stored = localStorage.getItem('auth_user');
+      if (stored) {
+        try { return JSON.parse(stored); } catch { /* invalid */ }
+      }
+      return null;
+    }
+  );
+
+  const isAuthenticated = !!token && !!user;
+
+  /* ── Sync body class for auth-mode CSS overrides ────────────────── */
+  useEffect(() => {
+    if (isAuthenticated) {
+      document.body.classList.remove('auth-mode');
+    } else {
+      document.body.classList.add('auth-mode');
+    }
+  }, [isAuthenticated]);
+
+  /* ── Restore persisted theme on app mount ──────────────────────── */
+  useEffect(() => {
+    try {
+      const prefsStr = localStorage.getItem('app_preferences');
+      if (prefsStr) {
+        const prefs = JSON.parse(prefsStr);
+        const isDark = prefs.darkMode !== false;
+        document.body.classList.toggle('light-mode', !isDark);
+      }
+    } catch (e) {
+      // Silent fail, keep default dark mode
+    }
+  }, []);
+
+  /* ── Login success handler ──────────────────────────────────────── */
+  const handleLoginSuccess = (data: AuthResponse) => {
+    const userData = { username: data.username, role: data.role, email: data.email };
+    localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('auth_user', JSON.stringify(userData));
+    setToken(data.token);
+    setUser(userData);
+  };
+
+  /* ── Logout handler (used by Header later) ──────────────────────── */
+  // Will be wired properly via context in a future step
+
+  /* ── If not authenticated, show auth page ───────────────────────── */
+  if (!isAuthenticated) {
+    return <AuthPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  /* ── Authenticated layout ───────────────────────────────────────── */
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<MainLayout />}>
+          {/* Default redirect */}
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Functional pages */}
+          <Route path="/employee360" element={<Employee360 />} />
+          <Route path="/reconciliation" element={<Reconciliation />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/management" element={<DataManagement />} />
+          <Route path="/api-explorer" element={<ApiExplorer />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}

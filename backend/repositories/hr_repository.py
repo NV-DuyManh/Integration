@@ -28,6 +28,7 @@ class HRRepository:
                 SELECT TABLE_SCHEMA, TABLE_NAME
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_TYPE = 'BASE TABLE'
+                  AND TABLE_NAME != 'sysdiagrams'
                 ORDER BY TABLE_SCHEMA, TABLE_NAME
             """)
             columns = [desc[0] for desc in cur.description]
@@ -122,5 +123,40 @@ class HRRepository:
         """Get all employees for reconciliation."""
         with sqlserver_cursor() as cur:
             cur.execute("SELECT EmployeeID, FullName, Status FROM dbo.Employees")
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+    @staticmethod
+    def get_employees_with_joins(limit: int = 200) -> list[dict]:
+        """Get employees with DepartmentName and PositionName via JOINs."""
+        with sqlserver_cursor() as cur:
+            cur.execute(f"""
+                SELECT TOP {int(limit)}
+                    e.EmployeeID, e.FullName, e.DateOfBirth, e.Gender,
+                    e.PhoneNumber, e.Email, e.HireDate,
+                    e.DepartmentID, d.DepartmentName,
+                    e.PositionID, p.PositionName,
+                    e.Status, e.CreatedAt, e.UpdatedAt
+                FROM dbo.Employees e
+                LEFT JOIN dbo.Departments d ON e.DepartmentID = d.DepartmentID
+                LEFT JOIN dbo.Positions p ON e.PositionID = p.PositionID
+                ORDER BY e.EmployeeID
+            """)
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+    @staticmethod
+    def get_all_departments() -> list[dict]:
+        """Get all departments for dropdown population."""
+        with sqlserver_cursor() as cur:
+            cur.execute("SELECT DepartmentID, DepartmentName FROM dbo.Departments ORDER BY DepartmentName")
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+    @staticmethod
+    def get_all_positions() -> list[dict]:
+        """Get all positions for dropdown population."""
+        with sqlserver_cursor() as cur:
+            cur.execute("SELECT PositionID, PositionName FROM dbo.Positions ORDER BY PositionName")
             columns = [desc[0] for desc in cur.description]
             return [dict(zip(columns, row)) for row in cur.fetchall()]
