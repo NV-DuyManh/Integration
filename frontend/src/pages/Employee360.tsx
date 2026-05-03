@@ -38,22 +38,19 @@ export default function Employee360() {
   return (
     <>
       {/* Search Hero */}
-      <div className="card glass" style={{ padding: '56px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden', marginBottom: 32, borderRadius: 'var(--radius-xl)' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: 'linear-gradient(90deg, var(--accent-cyan), var(--accent-purple))' }} />
-        <div style={{ width: 72, height: 72, background: 'rgba(0,242,254,0.1)', color: 'var(--accent-cyan)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 32, boxShadow: '0 0 24px rgba(0,242,254,0.2)' }}>
+      <div className="card glass page-hero" style={{ padding: '56px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden', marginBottom: 32 }}>
+        <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg, var(--neon-cyan), var(--neon-purple))', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 32, boxShadow: '0 0 30px rgba(0,242,254,0.3), 0 0 60px rgba(188,19,254,0.15)', transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s' }}>
           <FiSearch size={36} />
         </div>
-        <h2 style={{ fontSize: 36, marginBottom: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Employee Intelligence 360</h2>
+        <h2 className="glow-text" style={{ fontSize: 36, marginBottom: 16, fontWeight: 800 }}>Employee Intelligence 360</h2>
         <p style={{ fontSize: 17, color: 'var(--text-secondary)', marginBottom: 40, maxWidth: 640, margin: '0 auto 40px' }}>
           Instantly retrieve unified HR and Payroll records across systems.
         </p>
-        <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', gap: 12, background: 'rgba(15,23,42,0.6)', padding: 10, borderRadius: 999, border: '1px solid rgba(0,242,254,0.15)' }}>
+        <div className="search-wrapper" style={{ maxWidth: 680, margin: '0 auto' }}>
           <input className="cyber-input" placeholder="Search by name, ID, or department..." value={query}
             onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            style={{ border: 'none', background: 'transparent', fontSize: 16, padding: '12px 24px', borderRadius: 999, flex: 1 }} />
-          <button className="btn-primary" onClick={handleSearch} disabled={loading}
-            style={{ padding: '12px 36px', fontSize: 16, borderRadius: 999 }}>
+            onKeyDown={e => e.key === 'Enter' && handleSearch()} />
+          <button onClick={handleSearch} disabled={loading}>
             {loading ? 'Searching...' : 'Search Employee'}
           </button>
         </div>
@@ -64,12 +61,12 @@ export default function Employee360() {
       {hr && (
         <div className="profile-card fade-in" style={{ marginTop: 32, border: '1px solid rgba(0,242,254,0.1)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
           {/* Profile Header */}
-          <div style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.05), rgba(139,92,246,0.05))', borderBottom: '1px solid rgba(0,242,254,0.08)', padding: 32, display: 'flex', alignItems: 'center', gap: 24 }}>
-            <div className="user-avatar" style={{ width: 80, height: 80, fontSize: 32, background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(0,242,254,0.05), rgba(188,19,254,0.05))', borderBottom: '1px solid rgba(0,242,254,0.08)', padding: 32, display: 'flex', alignItems: 'center', gap: 24 }}>
+            <div className="user-avatar" style={{ width: 80, height: 80, fontSize: 32, background: 'linear-gradient(135deg, var(--neon-cyan), var(--neon-purple))', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, boxShadow: '0 0 24px rgba(0,242,254,0.35), 0 0 48px rgba(188,19,254,0.15)' }}>
               {hr.FullName?.charAt(0) || '?'}
             </div>
             <div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{hr.FullName}</h2>
+              <h2 className="glow-text2" style={{ fontSize: 24, fontWeight: 800 }}>{hr.FullName}</h2>
               <p style={{ fontSize: 15, color: 'var(--text-secondary)' }}>{hr.PositionName || '—'} • {hr.DepartmentName || '—'}</p>
             </div>
           </div>

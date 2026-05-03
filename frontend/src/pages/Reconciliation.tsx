@@ -23,17 +23,18 @@ export default function Reconciliation() {
       {/* Stat Cards */}
       <div className="stats-grid">
         {[
-          { label: 'Total in HR', value: s.total_hr, icon: <FiUsers />, color: 'var(--accent-cyan)' },
-          { label: 'Total in Payroll', value: s.total_payroll, icon: <FiDatabase />, color: 'var(--accent-green)' },
-          { label: 'Missing in Payroll', value: s.missing_in_payroll_count, icon: <FiAlertCircle />, color: s.missing_in_payroll_count > 0 ? 'var(--accent-red)' : 'var(--accent-green)' },
-          { label: 'Missing in HR', value: s.missing_in_hr_count, icon: <FiAlertCircle />, color: s.missing_in_hr_count > 0 ? 'var(--accent-red)' : 'var(--accent-green)' },
+          { label: 'Total in HR', value: s.total_hr, icon: <FiUsers />, color: 'var(--accent-cyan)', grad: 'linear-gradient(90deg, var(--accent-cyan), var(--accent-green))', glow: 'rgba(0,242,254,0.5)' },
+          { label: 'Total in Payroll', value: s.total_payroll, icon: <FiDatabase />, color: 'var(--accent-green)', grad: 'linear-gradient(90deg, var(--accent-green), var(--accent-yellow))', glow: 'rgba(74,222,128,0.5)' },
+          { label: 'Missing in Payroll', value: s.missing_in_payroll_count, icon: <FiAlertCircle />, color: s.missing_in_payroll_count > 0 ? 'var(--accent-red)' : 'var(--accent-green)', grad: s.missing_in_payroll_count > 0 ? 'linear-gradient(90deg, var(--accent-red), var(--accent-yellow))' : 'linear-gradient(90deg, var(--accent-green), var(--accent-cyan))', glow: s.missing_in_payroll_count > 0 ? 'rgba(239,68,68,0.5)' : 'rgba(74,222,128,0.5)' },
+          { label: 'Missing in HR', value: s.missing_in_hr_count, icon: <FiAlertCircle />, color: s.missing_in_hr_count > 0 ? 'var(--accent-red)' : 'var(--accent-green)', grad: s.missing_in_hr_count > 0 ? 'linear-gradient(90deg, var(--accent-yellow), var(--accent-red))' : 'linear-gradient(90deg, var(--accent-cyan), var(--accent-green))', glow: s.missing_in_hr_count > 0 ? 'rgba(239,68,68,0.5)' : 'rgba(74,222,128,0.5)' },
         ].map((c, i) => (
           <div key={i} className="stat-card glass" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: c.grad }} />
             <div className="stat-header">
               <span className="stat-label" style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', fontSize: 11, fontWeight: 700 }}>{c.label}</span>
-              <span className="stat-icon" style={{ width: 20, height: 20, color: c.color }}>{c.icon}</span>
+              <span className="stat-icon" style={{ width: 20, height: 20, color: c.color, filter: `drop-shadow(0 0 4px ${c.glow})` }}>{c.icon}</span>
             </div>
-            <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: c.color }}>{c.value}</div>
+            <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: c.color, textShadow: `0 0 10px ${c.glow}` }}>{c.value}</div>
           </div>
         ))}
       </div>

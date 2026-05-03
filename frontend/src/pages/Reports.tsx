@@ -59,13 +59,9 @@ export default function Reports() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 20 }}>
             {REPORT_TYPES.map(t => (
               <div key={t.id} onClick={() => handleGenerate(t.id)}
-                className="card" style={{
-                  cursor: 'pointer', padding: 20, textAlign: 'left', transition: 'all 0.2s',
-                  border: `2px solid ${selectedType === t.id ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.06)'}`,
-                  background: selectedType === t.id ? 'rgba(0,242,254,0.06)' : 'rgba(15,23,42,0.4)',
-                }}>
-                <h4 style={{ color: selectedType === t.id ? 'var(--accent-cyan)' : 'var(--text-primary)', marginBottom: 8, fontSize: 14 }}>{t.label}</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.4 }}>{t.desc}</p>
+                className={`report-card-selector${selectedType === t.id ? ' active' : ''}`}>
+                <h4 style={{ color: selectedType === t.id ? 'var(--accent-cyan)' : 'var(--text-primary)', marginBottom: 8, fontSize: 14, fontWeight: 700 }}>{t.label}</h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.5 }}>{t.desc}</p>
               </div>
             ))}
           </div>
