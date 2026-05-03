@@ -18,11 +18,13 @@ export default function Header() {
   const meta = pageMeta[pathname] ?? { title: 'Dashboard', subtitle: '' };
 
   const handleLogout = () => {
-    console.log('[Header] Logout clicked — placeholder');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    window.location.href = '/';
   };
 
   const handleRefresh = () => {
-    console.log('[Header] Refresh clicked — placeholder');
+    window.location.reload();
   };
 
   return (

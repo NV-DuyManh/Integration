@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Employee360 from './pages/Employee360';
 import Reconciliation from './pages/Reconciliation';
 import Reports from './pages/Reports';
+import DataManagement from './pages/DataManagement';
+import ApiExplorer from './pages/ApiExplorer';
+import Settings from './pages/Settings';
 import type { AuthResponse } from './api';
 
 export default function App() {
@@ -64,9 +67,9 @@ export default function App() {
           <Route path="/employee360" element={<Employee360 />} />
           <Route path="/reconciliation" element={<Reconciliation />} />
           <Route path="/reports" element={<Reports />} />
-          <Route path="/management" element={<div className="p-10 glow-text text-3xl font-bold">Data Management — coming soon</div>} />
-          <Route path="/api-explorer" element={<div className="p-10 glow-text text-3xl font-bold">API Explorer — coming soon</div>} />
-          <Route path="/settings" element={<div className="p-10 glow-text text-3xl font-bold">Settings — coming soon</div>} />
+          <Route path="/management" element={<DataManagement />} />
+          <Route path="/api-explorer" element={<ApiExplorer />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>
