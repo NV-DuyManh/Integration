@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
+import Employee360 from './pages/Employee360';
+import Reconciliation from './pages/Reconciliation';
+import Reports from './pages/Reports';
 import type { AuthResponse } from './api';
 
 export default function App() {
@@ -57,10 +60,10 @@ export default function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* Placeholder pages — will be replaced by real components later */}
-          <Route path="/employee360" element={<div className="p-10 glow-text text-3xl font-bold">Employee 360 — coming soon</div>} />
-          <Route path="/reconciliation" element={<div className="p-10 glow-text text-3xl font-bold">Reconciliation — coming soon</div>} />
-          <Route path="/reports" element={<div className="p-10 glow-text text-3xl font-bold">Reports — coming soon</div>} />
+          {/* Functional pages */}
+          <Route path="/employee360" element={<Employee360 />} />
+          <Route path="/reconciliation" element={<Reconciliation />} />
+          <Route path="/reports" element={<Reports />} />
           <Route path="/management" element={<div className="p-10 glow-text text-3xl font-bold">Data Management — coming soon</div>} />
           <Route path="/api-explorer" element={<div className="p-10 glow-text text-3xl font-bold">API Explorer — coming soon</div>} />
           <Route path="/settings" element={<div className="p-10 glow-text text-3xl font-bold">Settings — coming soon</div>} />
