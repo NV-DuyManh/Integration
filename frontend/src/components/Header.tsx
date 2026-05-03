@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { FiSearch, FiRefreshCw, FiLogOut } from 'react-icons/fi';
+import { FiRefreshCw, FiLogOut } from 'react-icons/fi';
 
 /* ── Title / subtitle map (mirrors the old renderHeader logic) ── */
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
@@ -35,9 +35,6 @@ export default function Header() {
         borderLeft: 'none',
         borderRight: 'none',
         borderTop: 'none',
-        background: 'rgba(10, 15, 30, 0.85)',
-        boxShadow:
-          '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(0, 242, 254, 0.06)',
       }}
     >
       {/* ── Left: page title ──────────────────────────────── */}
@@ -63,35 +60,6 @@ export default function Header() {
         className="header-right"
         style={{ display: 'flex', gap: 12, alignItems: 'center' }}
       >
-        <div className="global-search" style={{ position: 'relative' }}>
-          <input
-            type="text"
-            id="global-search-input"
-            className="cyber-input"
-            placeholder="Search employees..."
-            style={{
-              padding: '8px 12px 8px 32px',
-              borderRadius: 'var(--radius-sm)',
-              width: 220,
-              fontSize: 13,
-            }}
-          />
-          <span
-            style={{
-              position: 'absolute',
-              left: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--accent-cyan)',
-              opacity: 0.6,
-              width: 14,
-              height: 14,
-              display: 'flex',
-            }}
-          >
-            <FiSearch size={14} />
-          </span>
-        </div>
 
         <button
           className="header-btn btn-primary"

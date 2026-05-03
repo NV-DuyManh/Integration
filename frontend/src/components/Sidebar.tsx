@@ -40,9 +40,6 @@ export default function Sidebar() {
         borderTop: 'none',
         borderBottom: 'none',
         borderLeft: 'none',
-        background: 'rgba(10, 15, 30, 0.92)',
-        boxShadow:
-          'inset -1px 0 0 rgba(0, 242, 254, 0.06), 4px 0 24px rgba(0, 0, 0, 0.3)',
       }}
     >
       {/* ── Brand ─────────────────────────────────────────── */}
@@ -115,8 +112,7 @@ export default function Sidebar() {
       <div
         className="sidebar-footer"
         style={{
-          background: 'rgba(10, 15, 30, 0.95)',
-          borderTop: '1px solid rgba(0, 242, 254, 0.08)',
+          borderTop: '1px solid var(--border)',
         }}
       >
         <div className="connection-indicator">
@@ -176,7 +172,7 @@ export default function Sidebar() {
               {authUser.username.charAt(0).toUpperCase()}
             </div>
             <div className="user-info">
-              <span className="user-name" style={{ color: '#e2e8f0' }}>
+              <span className="user-name" style={{ color: 'var(--text-primary)' }}>
                 {authUser.username}
               </span>
               <span

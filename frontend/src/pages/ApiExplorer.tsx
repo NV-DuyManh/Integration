@@ -37,7 +37,7 @@ export default function ApiExplorer() {
       </div>
       <div className="card-body" style={{ display: 'flex', gap: 32, padding: 32, flexWrap: 'wrap' }}>
         {/* Endpoint List */}
-        <div style={{ flex: 1, minWidth: 250, borderRight: '1px solid rgba(0,242,254,0.08)', paddingRight: 32 }}>
+        <div style={{ flex: 1, minWidth: 250, borderRight: '1px solid var(--border)', paddingRight: 32 }}>
           <h4 style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Available Endpoints</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {ENDPOINTS.map(ep => (
@@ -52,8 +52,8 @@ export default function ApiExplorer() {
         {/* Query Panel */}
         <div style={{ flex: 2, minWidth: 400 }}>
           <h4 style={{ marginBottom: 16, fontSize: 14 }}>Endpoint Configuration</h4>
-          <div style={{ background: 'rgba(15,23,42,0.6)', padding: 24, borderRadius: 'var(--radius-sm)', border: '1px solid rgba(0,242,254,0.08)', marginBottom: 24 }}>
-            <div style={{ fontFamily: 'var(--mono)', color: 'var(--accent-cyan)', fontSize: 16, marginBottom: 20, background: 'rgba(10,15,30,0.6)', padding: 12, borderRadius: 6, border: '1px solid rgba(0,242,254,0.08)' }}>
+          <div style={{ background: 'var(--bg-secondary)', padding: 24, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: 24 }}>
+            <div style={{ fontFamily: 'var(--mono)', color: 'var(--accent-cyan)', fontSize: 16, marginBottom: 20, background: 'var(--bg-card-solid)', padding: 12, borderRadius: 6, border: '1px solid var(--border)' }}>
               GET <span style={{ color: 'var(--text-primary)' }}>{selected}</span>
             </div>
             <button className="btn-primary" onClick={runQuery} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -61,7 +61,7 @@ export default function ApiExplorer() {
             </button>
           </div>
           <h4 style={{ marginBottom: 16, fontSize: 14 }}>Response Output</h4>
-          <pre style={{ background: 'rgba(10,15,30,0.8)', padding: 24, borderRadius: 'var(--radius-sm)', border: '1px solid rgba(0,242,254,0.08)', fontFamily: 'var(--mono)', fontSize: 13, overflowX: 'auto', color: 'var(--accent-green)', lineHeight: 1.6, minHeight: 200, maxHeight: 500 }}>
+          <pre style={{ background: 'var(--bg-secondary)', padding: 24, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontFamily: 'var(--mono)', fontSize: 13, overflowX: 'auto', color: 'var(--text-secondary)', lineHeight: 1.6, minHeight: 200, maxHeight: 500 }}>
             {response || 'Click "Run Test Query" to see response.'}
           </pre>
         </div>

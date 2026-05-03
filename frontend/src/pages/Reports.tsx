@@ -56,7 +56,7 @@ export default function Reports() {
           </div>
         </div>
         <div className="card-body" style={{ padding: '0 24px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 20 }}>
             {REPORT_TYPES.map(t => (
               <div key={t.id} onClick={() => handleGenerate(t.id)}
                 className="card" style={{

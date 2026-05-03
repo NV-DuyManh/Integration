@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiUser, FiShield, FiMail, FiDatabase, FiCheck, FiCheckCircle } from 'react-icons/fi';
+import { FiUser, FiShield, FiMail, FiDatabase, FiCheck } from 'react-icons/fi';
 import { api } from '../api';
 import type { SystemStatus } from '../api';
 
@@ -19,7 +19,6 @@ export default function Settings() {
   const user = (() => { try { return JSON.parse(localStorage.getItem('auth_user')||'{}'); } catch { return {}; } })();
   const [dbStatus, setDbStatus] = useState<SystemStatus | null>(null);
   const [toggles, setToggles] = useState(loadPrefs);
-  const [alertMsg, setAlertMsg] = useState('');
 
   useEffect(() => { api.dashboardStatus().then(r => { if (r.data) setDbStatus(r.data); }); }, []);
 
@@ -38,8 +37,6 @@ export default function Settings() {
     const updated = { ...toggles, [key]: !toggles[key] };
     setToggles(updated);
     localStorage.setItem(PREFS_KEY, JSON.stringify(updated));
-    setAlertMsg('Setting updated successfully!');
-    setTimeout(() => setAlertMsg(''), 3000);
   };
 
   const Toggle = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) => (
@@ -55,20 +52,6 @@ export default function Settings() {
     <div className="card glass fade-in" style={{ borderRadius: 'var(--radius-lg)' }}>
       <div className="card-header"><h3>System Settings & Diagnostics</h3></div>
       <div className="card-body" style={{ padding: 32 }}>
-
-        {/* Success Toast */}
-        {alertMsg && (
-          <div className="fade-in" style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '14px 20px', marginBottom: 24, borderRadius: 'var(--radius-md)',
-            background: 'var(--success-bg)', border: '1px solid rgba(74,222,128,0.25)',
-            color: 'var(--success)', fontWeight: 600, fontSize: 14,
-            animation: 'fadeIn 0.3s ease'
-          }}>
-            <FiCheckCircle size={18} />
-            {alertMsg}
-          </div>
-        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 32 }}>
           {/* Account Info */}

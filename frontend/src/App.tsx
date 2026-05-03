@@ -37,6 +37,20 @@ export default function App() {
     }
   }, [isAuthenticated]);
 
+  /* ── Restore persisted theme on app mount ──────────────────────── */
+  useEffect(() => {
+    try {
+      const prefsStr = localStorage.getItem('app_preferences');
+      if (prefsStr) {
+        const prefs = JSON.parse(prefsStr);
+        const isDark = prefs.darkMode !== false;
+        document.body.classList.toggle('light-mode', !isDark);
+      }
+    } catch (e) {
+      // Silent fail, keep default dark mode
+    }
+  }, []);
+
   /* ── Login success handler ──────────────────────────────────────── */
   const handleLoginSuccess = (data: AuthResponse) => {
     const userData = { username: data.username, role: data.role, email: data.email };
