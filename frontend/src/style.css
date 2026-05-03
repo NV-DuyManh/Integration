@@ -1949,12 +1949,14 @@ body.light-mode .report-card-selector.active {
 
 .search-wrapper input {
   width: 100% !important;
-  padding: 16px 180px 16px 24px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  height: 56px !important;
+  padding-left: 30px !important;
+  padding-right: 190px !important; /* Breathable space for the button */
+  background: rgba(255, 255, 255, 0.07) !important; /* Slightly more visible */
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 999px !important;
+  border-radius: 60px !important; /* Smoother curve */
   color: #ffffff;
-  font-size: 15px;
+  font-size: 15px !important;
   font-family: var(--font);
   transition: all 0.3s ease;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
@@ -1973,11 +1975,11 @@ body.light-mode .report-card-selector.active {
 
 .search-wrapper button {
   position: absolute !important;
-  right: 6px !important;
-  top: 50%;
-  transform: translateY(-50%);
-  height: calc(100% - 12px) !important;
-  padding: 0 28px !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  height: 40px !important; /* Fixed height for better control */
+  padding: 0 30px !important;
   border-radius: 999px !important;
   background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)) !important;
   color: #ffffff !important;
@@ -1985,7 +1987,7 @@ body.light-mode .report-card-selector.active {
   font-weight: 700 !important;
   font-size: 13px !important;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   border: none !important;
   box-shadow: 0 0 12px rgba(0, 242, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
   cursor: pointer;
@@ -1994,12 +1996,12 @@ body.light-mode .report-card-selector.active {
 }
 
 .search-wrapper button:hover:not(:disabled) {
-  transform: translateY(-50%) scale(1.03);
+  transform: translateY(-50%) scale(1.03) !important;
   box-shadow: 0 0 24px rgba(0, 242, 255, 0.5), 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .search-wrapper button:active:not(:disabled) {
-  transform: translateY(-50%) scale(0.98);
+  transform: translateY(-50%) scale(0.97) !important;
 }
 
 .search-wrapper button:disabled {
