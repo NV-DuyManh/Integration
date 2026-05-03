@@ -22,7 +22,7 @@ export default function MainLayout() {
       <div className="main-content">
         <Header />
 
-        <main className="content-area">
+        <main className="page-content">
           <Outlet />
         </main>
       </div>

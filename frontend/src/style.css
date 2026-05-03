@@ -595,6 +595,9 @@ body::before {
 .page-content {
   padding: 32px;
   flex: 1;
+  max-width: 1800px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* ══════════════════════════════════════════════════════════════════

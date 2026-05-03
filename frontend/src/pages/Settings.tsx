@@ -42,7 +42,7 @@ export default function Settings() {
   const Toggle = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid rgba(0,242,254,0.06)' }}>
       <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{label}</span>
-      <div onClick={onChange} style={{ width: 48, height: 26, borderRadius: 13, background: checked ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', transition: 'all 0.3s', boxShadow: checked ? '0 0 12px rgba(0,242,254,0.3)' : 'none' }}>
+      <div onClick={onChange} style={{ width: 48, height: 26, borderRadius: 13, background: checked ? 'var(--accent-cyan)' : 'rgba(148, 163, 184, 0.4)', cursor: 'pointer', position: 'relative', transition: 'all 0.3s', boxShadow: checked ? '0 0 12px rgba(0,242,254,0.3)' : 'inset 0 2px 4px rgba(0,0,0,0.1)' }}>
         <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: checked ? 25 : 3, transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
       </div>
     </div>
