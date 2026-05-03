@@ -58,6 +58,33 @@ async def delete_employee(emp_id: int):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/employees")
+async def get_employees_with_names():
+    """Get all employees with DepartmentName and PositionName."""
+    try:
+        return hr_service.get_employees_with_names()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/departments")
+async def get_departments():
+    """Get all departments for dropdown."""
+    try:
+        return hr_service.get_all_departments()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/positions")
+async def get_positions():
+    """Get all positions for dropdown."""
+    try:
+        return hr_service.get_all_positions()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/employees/orphan")
 async def add_orphan_employee(employee_data: dict = Body(...)):
     """[TEST ONLY] Create an orphan employee in HR DB only (no payroll sync).

@@ -7,6 +7,8 @@ export default function DataManagement() {
   const [tab, setTab] = useState<'employees'|'salaries'>('employees');
   const [employees, setEmployees] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
   const [empSearch, setEmpSearch] = useState('');
   const [salSearch, setSalSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,19 +21,26 @@ export default function DataManagement() {
 
   const loadData = async () => {
     setLoading(true);
-    const [e, s] = await Promise.all([api.getHrTableData('Employees'), api.getPayrollTableData('salaries')]);
+    const [e, s, d, p] = await Promise.all([
+      api.getEmployeesWithNames(),
+      api.getPayrollTableData('salaries'),
+      api.getDepartments(),
+      api.getPositions(),
+    ]);
     if (e.data) setEmployees((e.data as any).data || []);
     if (s.data) setSalaries((s.data as any).data || []);
+    if (d.data) setDepartments(Array.isArray(d.data) ? d.data : []);
+    if (p.data) setPositions(Array.isArray(p.data) ? p.data : []);
     setLoading(false);
   };
   useEffect(() => { loadData(); }, []);
 
   // Employee CRUD
-  const openAddEmp = () => { setEmpForm({ FullName:'', DateOfBirth:'', HireDate: new Date().toISOString().split('T')[0], Email:'', PhoneNumber:'', DepartmentID:'', PositionID:'', Status:'Đang làm việc' }); setEmpModal(true); };
+  const openAddEmp = () => { setEmpForm({ FullName:'', DateOfBirth:'', HireDate: new Date().toISOString().split('T')[0], Email:'', PhoneNumber:'', DepartmentID:'', PositionID:'', Status:'Đang làm việc', Gender:'Nam' }); setEmpModal(true); };
   const openEditEmp = (e: any) => { setEmpForm({ ...e }); setEmpModal(true); };
   const saveEmp = async (ev: React.FormEvent) => {
     ev.preventDefault(); setLoading(true);
-    const d = { FullName: empForm.FullName, DateOfBirth: empForm.DateOfBirth, HireDate: empForm.HireDate, Email: empForm.Email, PhoneNumber: empForm.PhoneNumber, DepartmentID: Number(empForm.DepartmentID)||null, PositionID: Number(empForm.PositionID)||null, Status: empForm.Status };
+    const d = { FullName: empForm.FullName, DateOfBirth: empForm.DateOfBirth, HireDate: empForm.HireDate, Email: empForm.Email, PhoneNumber: empForm.PhoneNumber, DepartmentID: Number(empForm.DepartmentID)||null, PositionID: Number(empForm.PositionID)||null, Status: empForm.Status, Gender: empForm.Gender || 'Nam' };
     if (empForm.EmployeeID) await api.updateEmployee(empForm.EmployeeID, d);
     else await api.addEmployee(d);
     setEmpModal(false); await loadData();
@@ -134,19 +143,21 @@ export default function DataManagement() {
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
             <table className="data-table" style={{ width: '100%' }}>
               <thead className="table-header"><tr>
-                <th style={{ padding: 16 }}>ID</th><th style={{ padding: 16 }}>Full Name</th><th style={{ padding: 16 }}>Email</th>
-                <th style={{ padding: 16 }}>Dept ID</th><th style={{ padding: 16 }}>Status</th><th style={{ textAlign: 'right', padding: 16 }}>Actions</th>
+                <th style={{ padding: 16 }}>ID</th><th style={{ padding: 16 }}>Full Name</th><th style={{ padding: 16 }}>Email</th><th style={{ padding: 16 }}>Phone</th>
+                <th style={{ padding: 16 }}>Department</th><th style={{ padding: 16 }}>Position</th><th style={{ padding: 16 }}>Status</th><th style={{ padding: 16 }}>Actions</th>
               </tr></thead>
               <tbody>
-                {dispEmp.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No employees found.</td></tr> :
+                {dispEmp.length === 0 ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No employees found.</td></tr> :
                   dispEmp.map(e => (
                     <tr key={e.EmployeeID} className="table-row">
                       <td className="table-cell mono" style={{ padding: 16, color: 'var(--accent-cyan)' }}>{e.EmployeeID}</td>
                       <td className="table-cell" style={{ fontWeight: 600, padding: 16 }}>{e.FullName}</td>
                       <td className="table-cell" style={{ padding: 16, color: 'var(--text-secondary)' }}>{e.Email || '—'}</td>
-                      <td className="table-cell" style={{ padding: 16 }}>{e.DepartmentID || '—'}</td>
+                      <td className="table-cell" style={{ padding: 16, color: 'var(--text-secondary)' }}>{e.PhoneNumber || '—'}</td>
+                      <td className="table-cell" style={{ padding: 16 }}>{e.DepartmentName || '—'}</td>
+                      <td className="table-cell" style={{ padding: 16 }}>{e.PositionName || '—'}</td>
                       <td className="table-cell" style={{ padding: 16 }}><span className={`status-badge ${getStatusClass(e.Status)}`}>● {e.Status || '—'}</span></td>
-                      <td className="table-cell" style={{ textAlign: 'right', padding: 16 }}>
+                      <td className="table-cell" style={{ padding: 16 }}>
                         <button className="btn-edit" onClick={() => openEditEmp(e)} style={{ padding: '6px 12px', marginRight: 8, borderRadius: 8 }} title="Edit"><FiEdit size={14} /></button>
                         <button className="btn-delete" onClick={() => delEmp(e.EmployeeID)} style={{ padding: '6px 12px', borderRadius: 8 }} title="Delete"><FiTrash2 size={14} /></button>
                       </td>
@@ -216,27 +227,59 @@ export default function DataManagement() {
             </div>
             <div className="card-body" style={{ padding: 32, maxHeight: '80vh', overflowY: 'auto' }}>
               <form onSubmit={saveEmp} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* Row 1: Full Name (full width) */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <label style={labelStyle}>Full Name *</label>
                   <input className="cyber-input" required value={empForm.FullName||''} onChange={e => setEmpForm({...empForm, FullName: e.target.value})} style={inputStyle} placeholder="e.g. John Doe" />
                 </div>
+                {/* Row 2: Date of Birth | Gender */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Date of Birth *</label><input type="date" className="cyber-input" required value={empForm.DateOfBirth||''} onChange={e => setEmpForm({...empForm, DateOfBirth: e.target.value})} style={inputStyle} /></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Hire Date *</label><input type="date" className="cyber-input" required value={empForm.HireDate||''} onChange={e => setEmpForm({...empForm, HireDate: e.target.value})} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={labelStyle}>Gender</label>
+                    <div className="gender-group">
+                      <div className="gender-option">
+                        <input type="radio" id="gender-nam" name="gender" value="Nam" checked={empForm.Gender === 'Nam'} onChange={() => setEmpForm({...empForm, Gender: 'Nam'})} />
+                        <label htmlFor="gender-nam"><span className="gender-icon">♂</span> Nam</label>
+                      </div>
+                      <div className="gender-option">
+                        <input type="radio" id="gender-nu" name="gender" value="Nữ" checked={empForm.Gender === 'Nữ'} onChange={() => setEmpForm({...empForm, Gender: 'Nữ'})} />
+                        <label htmlFor="gender-nu"><span className="gender-icon">♀</span> Nữ</label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                {/* Row 3: Email | Phone */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Email</label><input type="email" className="cyber-input" value={empForm.Email||''} onChange={e => setEmpForm({...empForm, Email: e.target.value})} style={inputStyle} /></div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Phone</label><input className="cyber-input" value={empForm.PhoneNumber||''} onChange={e => setEmpForm({...empForm, PhoneNumber: e.target.value})} style={inputStyle} /></div>
                 </div>
+                {/* Row 4: Department | Position */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Department ID</label><input type="number" className="cyber-input" value={empForm.DepartmentID||''} onChange={e => setEmpForm({...empForm, DepartmentID: e.target.value})} style={inputStyle} /></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Position ID</label><input type="number" className="cyber-input" value={empForm.PositionID||''} onChange={e => setEmpForm({...empForm, PositionID: e.target.value})} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={labelStyle}>Department</label>
+                    <select className="cyber-input" value={empForm.DepartmentID||''} onChange={e => setEmpForm({...empForm, DepartmentID: e.target.value})} style={{...inputStyle, appearance: 'auto' as any, cursor: 'pointer'}}>
+                      <option value="">— Select Department —</option>
+                      {departments.map((d: any) => <option key={d.DepartmentID} value={d.DepartmentID}>{d.DepartmentName}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={labelStyle}>Position</label>
+                    <select className="cyber-input" value={empForm.PositionID||''} onChange={e => setEmpForm({...empForm, PositionID: e.target.value})} style={{...inputStyle, appearance: 'auto' as any, cursor: 'pointer'}}>
+                      <option value="">— Select Position —</option>
+                      {positions.map((p: any) => <option key={p.PositionID} value={p.PositionID}>{p.PositionName}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label style={labelStyle}>Status</label>
-                  <select className="cyber-input" value={empForm.Status||'Đang làm việc'} onChange={e => setEmpForm({...empForm, Status: e.target.value})} style={{...inputStyle, appearance: 'auto' as any, cursor: 'pointer'}}>
-                    <option value="Đang làm việc">Đang làm việc</option><option value="Thử việc">Thử việc</option><option value="Thực tập">Thực tập</option><option value="Nghỉ phép">Nghỉ phép</option>
-                  </select>
+                {/* Row 5: Hire Date | Status */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><label style={labelStyle}>Hire Date *</label><input type="date" className="cyber-input" required value={empForm.HireDate||''} onChange={e => setEmpForm({...empForm, HireDate: e.target.value})} style={inputStyle} /></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={labelStyle}>Status</label>
+                    <select className="cyber-input" value={empForm.Status||'Đang làm việc'} onChange={e => setEmpForm({...empForm, Status: e.target.value})} style={{...inputStyle, appearance: 'auto' as any, cursor: 'pointer'}}>
+                      <option value="Đang làm việc">Đang làm việc</option><option value="Thử việc">Thử việc</option><option value="Thực tập">Thực tập</option><option value="Nghỉ phép">Nghỉ phép</option>
+                    </select>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(0,242,254,0.08)' }}>
                   <button type="button" className="btn-delete" onClick={() => setEmpModal(false)} style={{ padding: '12px 24px', borderRadius: 999 }}><FiX style={{ marginRight: 6 }} /> Cancel</button>

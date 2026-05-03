@@ -54,3 +54,21 @@ class HRService:
     #   def get_active_employees(self) -> list
     #   def get_department_headcount(self) -> dict
     #   def search_employees(self, query: str) -> list
+
+    def get_employees_with_names(self, limit: int = 200) -> dict:
+        """Get employees with department/position names for the Data Management table."""
+        rows = self.repo.get_employees_with_joins(limit)
+        return {
+            "table": "dbo.Employees",
+            "total_rows": len(rows),
+            "preview_rows": len(rows),
+            "data": rows,
+        }
+
+    def get_all_departments(self) -> list[dict]:
+        """Get all departments for dropdown."""
+        return self.repo.get_all_departments()
+
+    def get_all_positions(self) -> list[dict]:
+        """Get all positions for dropdown."""
+        return self.repo.get_all_positions()

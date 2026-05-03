@@ -172,6 +172,9 @@ export const api = {
   // Raw Data Fetch
   getHrTableData: (table: string, limit = 100) => fetchApi<any>(`/api/hr/tables/${table}?limit=${limit}`),
   getPayrollTableData: (table: string, limit = 100) => fetchApi<any>(`/api/payroll/tables/${table}?limit=${limit}`),
+  getEmployeesWithNames: () => fetchApi<any>('/api/hr/employees'),
+  getDepartments: () => fetchApi<any>('/api/hr/departments'),
+  getPositions: () => fetchApi<any>('/api/hr/positions'),
 
   // Auth
   register: (data: RegisterRequest) => postApi<AuthResponse>('/api/auth/register', data),
