@@ -9,6 +9,7 @@ import Reports from './pages/Reports';
 import DataManagement from './pages/DataManagement';
 import ApiExplorer from './pages/ApiExplorer';
 import Settings from './pages/Settings';
+import AccountManagement from './pages/AccountManagement';
 import type { AuthResponse } from './api';
 
 export default function App() {
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="/management" element={<DataManagement />} />
           <Route path="/api-explorer" element={<ApiExplorer />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/accounts" element={<AccountManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>

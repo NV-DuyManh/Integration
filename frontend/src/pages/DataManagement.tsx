@@ -19,6 +19,9 @@ export default function DataManagement() {
   const [orphanForm, setOrphanForm] = useState<any>({ FullName: '', DateOfBirth: '', HireDate: new Date().toISOString().split('T')[0], Status: 'Active' });
   const [salForm, setSalForm] = useState<any>({});
 
+  const user = (() => { try { return JSON.parse(localStorage.getItem('auth_user')||'{}'); } catch { return {}; } })();
+  const isAdmin = user.role?.toLowerCase() === 'admin';
+
   const loadData = async () => {
     setLoading(true);
     const [e, s, d, p] = await Promise.all([
@@ -132,12 +135,12 @@ export default function DataManagement() {
                 <input className="cyber-input" placeholder="Search employees..." value={empSearch} onChange={e => setEmpSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
               <button className="btn-export btn-excel" onClick={() => exportToExcel(dispEmp, 'Employees_Export.xlsx')}><FiDownload size={14} /> Export</button>
-              <button onClick={() => { setOrphanForm({ FullName: '', DateOfBirth: '', HireDate: new Date().toISOString().split('T')[0], Status: 'Active' }); setOrphanModal(true); }} style={{
+              {isAdmin && <button onClick={() => { setOrphanForm({ FullName: '', DateOfBirth: '', HireDate: new Date().toISOString().split('T')[0], Status: 'Active' }); setOrphanModal(true); }} style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999,
                 border: '1px solid rgba(255,107,107,0.4)', background: 'rgba(255,107,107,0.08)',
                 color: '#ff6b6b', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-              }}><FiAlertTriangle size={14} /> Inject Sync Error</button>
-              <button className="btn-primary" onClick={openAddEmp} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Employee</button>
+              }}><FiAlertTriangle size={14} /> Inject Sync Error</button>}
+              {isAdmin && <button className="btn-primary" onClick={openAddEmp} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Employee</button>}
             </div>
           </div>
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
@@ -158,8 +161,14 @@ export default function DataManagement() {
                       <td className="table-cell" style={{ padding: 16 }}>{e.PositionName || '—'}</td>
                       <td className="table-cell" style={{ padding: 16 }}><span className={`status-badge ${getStatusClass(e.Status)}`}>● {e.Status || '—'}</span></td>
                       <td className="table-cell" style={{ padding: 16 }}>
-                        <button className="btn-edit" onClick={() => openEditEmp(e)} style={{ padding: '6px 12px', marginRight: 8, borderRadius: 8 }} title="Edit"><FiEdit size={14} /></button>
-                        <button className="btn-delete" onClick={() => delEmp(e.EmployeeID)} style={{ padding: '6px 12px', borderRadius: 8 }} title="Delete"><FiTrash2 size={14} /></button>
+                        {isAdmin ? (
+                          <>
+                            <button className="btn-edit" onClick={() => openEditEmp(e)} style={{ padding: '6px 12px', marginRight: 8, borderRadius: 8 }} title="Edit"><FiEdit size={14} /></button>
+                            <button className="btn-delete" onClick={() => delEmp(e.EmployeeID)} style={{ padding: '6px 12px', borderRadius: 8 }} title="Delete"><FiTrash2 size={14} /></button>
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Read-only</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -180,7 +189,7 @@ export default function DataManagement() {
                 <input className="cyber-input" placeholder="Search ID or Month..." value={salSearch} onChange={e => setSalSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
               <button className="btn-export btn-excel" onClick={() => exportToExcel(dispSal, 'Salaries_Export.xlsx')}><FiDownload size={14} /> Export</button>
-              <button className="btn-primary" onClick={openAddSal} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Salary</button>
+              {isAdmin && <button className="btn-primary" onClick={openAddSal} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Salary</button>}
             </div>
           </div>
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
@@ -203,8 +212,14 @@ export default function DataManagement() {
                       <td className="table-cell" style={{ textAlign: 'right', padding: 16, color: 'var(--accent-red)' }}>-${s.Deductions?.toLocaleString()||0}</td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: 16, fontWeight: 600 }}>${s.NetSalary?.toLocaleString()||0}</td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: 16 }}>
-                        <button className="btn-edit" onClick={() => openEditSal(s)} style={{ padding: '6px 12px', marginRight: 8, borderRadius: 8 }} title="Edit"><FiEdit size={14} /></button>
-                        <button className="btn-delete" onClick={() => delSal(s.SalaryID)} style={{ padding: '6px 12px', borderRadius: 8 }} title="Delete"><FiTrash2 size={14} /></button>
+                        {isAdmin ? (
+                          <>
+                            <button className="btn-edit" onClick={() => openEditSal(s)} style={{ padding: '6px 12px', marginRight: 8, borderRadius: 8 }} title="Edit"><FiEdit size={14} /></button>
+                            <button className="btn-delete" onClick={() => delSal(s.SalaryID)} style={{ padding: '6px 12px', borderRadius: 8 }} title="Delete"><FiTrash2 size={14} /></button>
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Read-only</span>
+                        )}
                       </td>
                     </tr>
                   ))}

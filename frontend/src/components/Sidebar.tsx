@@ -8,6 +8,7 @@ import {
   FiTerminal,
   FiSettings,
   FiZap,
+  FiShield,
 } from 'react-icons/fi';
 
 /* ── Navigation structure ───────────────────────────────────────── */
@@ -29,7 +30,16 @@ export default function Sidebar() {
   // TODO: Wire these to real API status once the context/store is set up
   const sqlStatus = true;
   const mysqlStatus = true;
-  const authUser = { username: 'manh', role: 'VIEWER' };
+
+  // Dynamic user from localStorage
+  const user = (() => {
+    try { return JSON.parse(localStorage.getItem('auth_user') || '{}'); }
+    catch { return {}; }
+  })();
+
+  // Display role: show "USER" for viewers, otherwise uppercase the role
+  let displayRole = user.role?.toUpperCase() || 'USER';
+  if (displayRole === 'VIEWER') displayRole = 'USER';
 
   return (
     <aside
@@ -105,6 +115,11 @@ export default function Sidebar() {
               {item.label}
             </NavLink>
           ))}
+          {user.role?.toLowerCase() === 'admin' && (
+            <NavLink to="/accounts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <span className="nav-icon"><FiShield /></span> Accounts
+            </NavLink>
+          )}
         </div>
       </nav>
 
@@ -152,7 +167,7 @@ export default function Sidebar() {
           </span>
         </div>
 
-        {authUser && (
+        {user.username && (
           <div
             className="sidebar-user"
             style={{
@@ -169,11 +184,11 @@ export default function Sidebar() {
                 boxShadow: '0 2px 10px rgba(0, 242, 254, 0.25)',
               }}
             >
-              {authUser.username.charAt(0).toUpperCase()}
+              {user.username.charAt(0).toUpperCase()}
             </div>
             <div className="user-info">
               <span className="user-name" style={{ color: 'var(--text-primary)' }}>
-                {authUser.username}
+                {user.username}
               </span>
               <span
                 className="user-role"
@@ -184,7 +199,7 @@ export default function Sidebar() {
                   letterSpacing: '0.5px',
                 }}
               >
-                {authUser.role}
+                {displayRole}
               </span>
             </div>
           </div>
@@ -193,3 +208,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

@@ -6,6 +6,7 @@
 import logging
 from services.hr_service import HRService
 from services.payroll_service import PayrollService
+from services.transaction_service import TransactionService
 from core.database.sqlserver import test_sqlserver_connection
 from core.database.mysql import test_mysql_connection, mysql_cursor
 
@@ -69,6 +70,13 @@ class DashboardService:
             if payroll_info:
                 merged["NetSalary"] = payroll_info.get("NetSalary")
             results.append(merged)
+
+        TransactionService.log_transaction(
+            action="QUERY",
+            target_db="BOTH",
+            table="Employees",
+            details=f"Search '{query}' — {len(results)} results",
+        )
         return results
 
     def get_employee_360(self, employee_id: int) -> dict:
@@ -78,7 +86,14 @@ class DashboardService:
             return None
             
         payroll_data = self.payroll.repo.get_employee_payroll(employee_id)
-        
+
+        TransactionService.log_transaction(
+            action="READ",
+            target_db="BOTH",
+            table="Employees",
+            details=f"Employee 360 view for ID {employee_id}: {hr_data.get('FullName', 'N/A')}",
+        )
+
         return {
             "hr": hr_data,
             "payroll": payroll_data or {}
@@ -146,6 +161,12 @@ class DashboardService:
                     "BaseSalary": p.get("BaseSalary") if p else None,
                     "NetSalary": p.get("NetSalary") if p else None
                 })
+            TransactionService.log_transaction(
+                action="READ",
+                target_db="BOTH",
+                table="Reports",
+                details=f"Generated Compensation Report ({len(report_data)} employees)",
+            )
             return {"title": "Employee Compensation Report", "data": report_data}
             
         elif report_type == "exceptions":

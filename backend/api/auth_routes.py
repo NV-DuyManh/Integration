@@ -3,11 +3,13 @@
 #  Authentication endpoints — backed by local SQLite auth store
 #  No changes to HUMAN_2025 or PAYROLL_2026 schemas
 # ─────────────────────────────────────────────────────────────────
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Body
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 import re
 import logging
+
+from services.transaction_service import TransactionService
 
 from core.auth_store import (
     init_db,
@@ -17,6 +19,8 @@ from core.auth_store import (
     validate_session,
     destroy_session,
     cleanup_expired_sessions,
+    get_all_users,
+    update_user_role,
 )
 
 router = APIRouter()
@@ -108,6 +112,14 @@ async def register(req: RegisterRequest):
     token = create_session(user["id"])
     logger.info("📝 New user registered: %s (%s)", user["username"], user["email"])
 
+    TransactionService.log_transaction(
+        action="REGISTER",
+        target_db="auth.db",
+        table="users",
+        details=f"New user registered: {user['username']} ({user['email']})",
+        user=user["username"],
+    )
+
     return AuthResponse(
         token=token,
         username=user["username"],
@@ -130,6 +142,14 @@ async def login(req: LoginRequest):
 
     token = create_session(user["id"])
     logger.info("🔑 User logged in: %s", user["username"])
+
+    TransactionService.log_transaction(
+        action="LOGIN",
+        target_db="auth.db",
+        table="sessions",
+        details=f"User logged in: {user['username']}",
+        user=user["username"],
+    )
 
     return AuthResponse(
         token=token,
@@ -163,7 +183,41 @@ async def get_current_user(token: str = ""):
 async def logout(token: str = ""):
     """Invalidate session."""
     if token:
+        # Resolve username before destroying session
+        session_user = validate_session(token)
         destroyed = destroy_session(token)
         if destroyed:
             logger.info("🚪 Session destroyed")
+            TransactionService.log_transaction(
+                action="LOGOUT",
+                target_db="auth.db",
+                table="sessions",
+                details=f"User logged out: {session_user['username'] if session_user else 'unknown'}",
+                user=session_user["username"] if session_user else "unknown",
+            )
     return {"message": "Logged out successfully"}
+
+
+# ── User Management (Admin) ─────────────────────────────────────
+
+from core.auth_store import get_all_users, update_user_role
+from fastapi import Body
+
+
+@router.get("/users")
+async def list_users():
+    """List all registered users (admin use)."""
+    return get_all_users()
+
+
+@router.put("/users/{user_id}/role")
+async def change_user_role(user_id: int, payload: dict = Body(...)):
+    """Change a user's role (admin use)."""
+    new_role = payload.get("role")
+    if not new_role:
+        raise HTTPException(status_code=400, detail="Role is required")
+    success = update_user_role(user_id, new_role)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Role updated successfully", "new_role": new_role}
+

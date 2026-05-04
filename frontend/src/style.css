@@ -2245,3 +2245,75 @@ body.light-mode .header .header-btn.btn-delete:active {
 .btn-pdf:hover {
   box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5) !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   ACTIVITY TIMELINE — Dashboard Audit Logs
+   ══════════════════════════════════════════════════════════════════ */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes timeline-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.activity-timeline-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.activity-timeline {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,242,254,0.15) transparent;
+}
+
+.activity-timeline::-webkit-scrollbar {
+  width: 6px;
+}
+
+.activity-timeline::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb {
+  background: rgba(0,242,254,0.15);
+  border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,242,254,0.3);
+}
+
+.activity-item {
+  animation: timeline-slide-in 0.35s ease forwards;
+  opacity: 0;
+}
+
+.activity-item:hover {
+  background: rgba(0, 242, 254, 0.03) !important;
+}
+
+/* ── Light-mode overrides ──────────────────────────────────────── */
+body.light-mode .activity-timeline-card {
+  border-color: rgba(0,0,0,0.08);
+}
+
+body.light-mode .activity-item:hover {
+  background: rgba(2, 132, 199, 0.04) !important;
+}
+
+body.light-mode .activity-timeline::-webkit-scrollbar-thumb {
+  background: rgba(2, 132, 199, 0.15);
+}
+
+body.light-mode .activity-timeline::-webkit-scrollbar-thumb:hover {
+  background: rgba(2, 132, 199, 0.3);
+}

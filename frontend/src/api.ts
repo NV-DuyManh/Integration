@@ -141,6 +141,16 @@ export interface UserInfo {
   created_at: string;
 }
 
+export interface AuditLog {
+  id: number;
+  timestamp: string;
+  action: string;
+  target_db: string;
+  table_name: string;
+  details: string;
+  user: string;
+}
+
 // ── API Client ──────────────────────────────────────────────────
 
 export const api = {
@@ -159,6 +169,9 @@ export const api = {
   getReconciliation: () => fetchApi<any>('/api/dashboard/reconciliation'),
   getDataQuality: () => fetchApi<any>('/api/dashboard/quality'),
   getReport: (type: string) => fetchApi<any>(`/api/dashboard/reports/${type}`),
+
+  // Audit Logs
+  getAuditLogs: (limit = 50) => fetchApi<AuditLog[]>(`/api/dashboard/audit-logs?limit=${limit}`),
 
   // Management endpoints
   addEmployee: (data: any) => postApi<any>('/api/hr/employees', data),
@@ -181,4 +194,9 @@ export const api = {
   login: (creds: LoginRequest) => postApi<AuthResponse>('/api/auth/login', creds),
   logout: (token: string) => postApi<{ message: string }>(`/api/auth/logout?token=${token}`, {}),
   me: (token: string) => fetchApi<UserInfo>(`/api/auth/me?token=${token}`),
+
+  // Account Management
+  getUsers: () => fetchApi<any[]>('/api/auth/users'),
+  updateUserRole: (id: number, role: string) => putApi<any>(`/api/auth/users/${id}/role`, { role }),
 };
+

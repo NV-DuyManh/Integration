@@ -55,6 +55,23 @@ app.include_router(dashboard_router, prefix="/api/dashboard", tags=["Dashboard"]
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 
 
+@app.on_event("startup")
+async def startup_event():
+    from core.scheduler import start_scheduler
+    start_scheduler()
+
+    # Auto-create default admin account
+    from core.auth_store import create_user, _get_conn
+    with _get_conn() as conn:
+        admin_exists = conn.execute("SELECT id FROM users WHERE username='admin'").fetchone()
+    if not admin_exists:
+        try:
+            create_user("admin", "admin@nexusbridge.local", "admin123", "admin")
+            logger.info("✅ Default Root Admin created (admin / admin123)")
+        except Exception as e:
+            logger.error(f"Could not create default admin: {e}")
+
+
 @app.get("/health")
 async def health():
     return {

@@ -3,8 +3,9 @@
 #  Aggregated dashboard endpoints
 #  Bridges HUMAN_2025 ↔ PAYROLL_2026
 # ─────────────────────────────────────────────────────────────────
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from services.dashboard_service import DashboardService
+from services.transaction_service import TransactionService
 
 router = APIRouter()
 dashboard_service = DashboardService()
@@ -74,5 +75,14 @@ async def generate_report(report_type: str):
     """Generate integrated report."""
     try:
         return dashboard_service.generate_report(report_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/audit-logs")
+async def get_audit_logs(limit: int = Query(default=50, ge=1, le=500)):
+    """Fetch recent persistent audit log entries."""
+    try:
+        return TransactionService.get_recent_transactions(limit)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

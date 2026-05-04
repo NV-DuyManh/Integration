@@ -206,3 +206,18 @@ def get_user_count() -> int:
     with _get_conn() as conn:
         row = conn.execute("SELECT COUNT(*) as cnt FROM users").fetchone()
         return row["cnt"] if row else 0
+
+
+def get_all_users() -> list[dict]:
+    """Return all users (without password hashes)."""
+    with _get_conn() as conn:
+        rows = conn.execute("SELECT id, username, email, role, created_at FROM users").fetchall()
+        return [dict(r) for r in rows]
+
+
+def update_user_role(user_id: int, new_role: str) -> bool:
+    """Update a user's role. Returns True if the user existed."""
+    with _get_conn() as conn:
+        cursor = conn.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+        return cursor.rowcount > 0
+
