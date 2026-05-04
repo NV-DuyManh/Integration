@@ -84,27 +84,32 @@ export default function AccountManagement() {
                         {u.role.toUpperCase()}
                       </span>
                     </td>
-                    <td className="table-cell" style={{ padding: 16, textAlign: 'right' }}>
+                  <td className="table-cell" style={{ padding: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <button 
-                        className={u.role.toLowerCase() === 'editor' ? 'auth-btn btn-delete' : 'btn-primary'}
+                        className={u.role.toLowerCase() === 'editor' ? 'btn-delete' : 'btn-primary'}
                         onClick={() => openConfirmModal(u.id, u.role)}
                         disabled={currentUser.username === u.username || u.role.toLowerCase() === 'admin'}
                         style={{ 
-                          padding: '8px 16px', fontSize: 12, borderRadius: 8, 
+                          width: 170,
+                          padding: '10px 0',
+                          fontSize: 12, 
+                          borderRadius: 8, 
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textTransform: 'uppercase', 
+                          letterSpacing: '1px', 
+                          fontWeight: 700,
+                          transition: 'all 0.3s ease',
                           opacity: (currentUser.username === u.username || u.role.toLowerCase() === 'admin') ? 0.5 : 1,
-                          cursor: (currentUser.username === u.username || u.role.toLowerCase() === 'admin') ? 'not-allowed' : 'pointer',
-                          textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700,
-                          ...(u.role.toLowerCase() === 'editor' ? {
-                            background: 'transparent',
-                            border: '1px solid #ef4444',
-                            color: '#ef4444',
-                            boxShadow: '0 0 10px rgba(239, 68, 68, 0.2)'
-                          } : {})
+                          cursor: (currentUser.username === u.username || u.role.toLowerCase() === 'admin') ? 'not-allowed' : 'pointer'
                         }}
                       >
-                        {u.role.toLowerCase() === 'admin' ? 'Root Admin' : u.role.toLowerCase() === 'editor' ? 'Demote to Viewer' : 'Promote to Editor'}
+                        {u.role.toLowerCase() === 'editor' ? 'Demote to Viewer' : 'Promote to Editor'}
                       </button>
-                    </td>
+                    </div>
+                  </td>
                   </tr>
                 ))}
               </tbody>
