@@ -1818,8 +1818,31 @@ body.light-mode .report-card-selector.active {
   box-shadow: 0 0 12px rgba(99,102,241,0.2);
 }
 
-.data-table tbody tr:hover td {
-  background: var(--bg-primary);
+/* ── Table Row Hover System ────────────────────────────────────── */
+
+/* Smooth transition for all table rows */
+table tbody tr, .data-table tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Dark Mode Hover (Bright Cyan Glow) */
+table tbody tr:hover, .data-table tbody tr:hover {
+  background-color: rgba(0, 242, 254, 0.15) !important; /* Noticeable bright tint */
+  box-shadow: inset 4px 0 0 var(--neon-cyan) !important; /* Left highlight bar */
+  cursor: default;
+}
+
+/* Make sure text pops a bit more on hover */
+table tbody tr:hover td, .data-table tbody tr:hover td {
+  color: #ffffff !important;
+}
+
+/* Light Mode Hover Override */
+body.light-mode table tbody tr:hover,
+body.light-mode .data-table tbody tr:hover {
+  background-color: rgba(14, 165, 233, 0.12) !important; /* Soft blue for light mode */
+  box-shadow: inset 4px 0 0 #0ea5e9 !important;
+  color: #0f172a !important;
 }
 
 .data-table th {
