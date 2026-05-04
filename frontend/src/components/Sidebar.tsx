@@ -29,7 +29,20 @@ export default function Sidebar() {
   // TODO: Wire these to real API status once the context/store is set up
   const sqlStatus = true;
   const mysqlStatus = true;
-  const authUser = { username: 'manh', role: 'VIEWER' };
+
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('auth_user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const username = user.username || 'Guest';
+  const avatarLetter = username.charAt(0).toUpperCase();
+
+  // Map 'viewer' to 'USER', otherwise uppercase the role
+  const displayRole = user.role?.toLowerCase() === 'viewer' || !user.role ? 'USER' : user.role.toUpperCase();
 
   return (
     <aside
@@ -152,7 +165,7 @@ export default function Sidebar() {
           </span>
         </div>
 
-        {authUser && (
+        {username && (
           <div
             className="sidebar-user"
             style={{
@@ -169,11 +182,11 @@ export default function Sidebar() {
                 boxShadow: '0 2px 10px rgba(0, 242, 254, 0.25)',
               }}
             >
-              {authUser.username.charAt(0).toUpperCase()}
+              {avatarLetter}
             </div>
             <div className="user-info">
               <span className="user-name" style={{ color: 'var(--text-primary)' }}>
-                {authUser.username}
+                {username}
               </span>
               <span
                 className="user-role"
@@ -184,7 +197,7 @@ export default function Sidebar() {
                   letterSpacing: '0.5px',
                 }}
               >
-                {authUser.role}
+                {displayRole}
               </span>
             </div>
           </div>
