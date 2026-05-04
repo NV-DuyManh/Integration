@@ -83,12 +83,10 @@ export default function Reports() {
             <input className="cyber-input" placeholder="Search report data..." value={search} onChange={e => setSearch(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', width: 300, fontSize: 13 }} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, fontSize: 13 }}
-                onClick={() => exportToExcel(displayData, `${reportData?.title || 'Report'}.xlsx`)}>
+              <button className="btn-export btn-excel" onClick={() => exportToExcel(displayData, `${reportData?.title || 'Report'}.xlsx`)}>
                 <FiDownload size={14} /> Export Excel
               </button>
-              <button className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, fontSize: 13 }}
-                onClick={() => exportToPDF(displayData, reportData?.title || 'Report', `${reportData?.title || 'Report'}.pdf`)}>
+              <button className="btn-export btn-pdf" onClick={() => exportToPDF(displayData, reportData?.title || 'Report', `${reportData?.title || 'Report'}.pdf`)}>
                 <FiDownload size={14} /> Export PDF
               </button>
             </div>

@@ -1,4 +1,5 @@
 import logging
+import random
 import uuid
 from datetime import datetime, timezone
 from core.database.transaction import cross_db_transaction
@@ -247,10 +248,14 @@ class IntegrationService:
         from core.database.sqlserver import get_sqlserver_connection
         conn = get_sqlserver_connection()
         cur = conn.cursor()
-        # Generate fake unique data to bypass UNIQUE constraints on Email/Phone
+        # Generate fake unique data to bypass UNIQUE constraints
         fake_id = uuid.uuid4().hex[:8]
         fake_email = f"orphan_{fake_id}@demo.local"
         fake_phone = f"000{fake_id}"
+
+        # Randomize Vietnamese status to match UI consistency
+        valid_statuses = ["Đang làm việc", "Thử việc", "Thực tập", "Nghỉ phép"]
+        random_status = random.choice(valid_statuses)
 
         try:
             cur.execute("""
@@ -262,7 +267,7 @@ class IntegrationService:
                 employee_data['FullName'],
                 employee_data['DateOfBirth'],
                 employee_data['HireDate'],
-                employee_data.get('Status', 'Active'),
+                random_status,
                 fake_email,
                 fake_phone
             ))

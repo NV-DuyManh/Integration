@@ -1611,15 +1611,59 @@ body.light-mode .card.glass input[type="date"]::-webkit-calendar-picker-indicato
 .primary-btn:hover { box-shadow: 0 6px 20px var(--accent-glow); transform: translateY(-2px); }
 .primary-btn:hover::after { transform: rotate(45deg) translateY(100%); }
 
+/* Premium Secondary Buttons (Dark Mode Default) */
 .secondary-btn {
-  background: var(--bg-card-solid); color: var(--text-primary);
-  border: 1px solid var(--border-accent); border-radius: var(--radius-sm);
-  padding: 6px 14px; font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: all var(--transition);
-  box-shadow: var(--shadow-sm);
-  position: relative; overflow: hidden;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px; font-size: 12px;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
 }
-.secondary-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--accent-cyan) !important;
+  color: var(--accent-cyan) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0, 242, 254, 0.2) !important;
+}
+
+.secondary-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* Light Mode Override for Secondary Buttons */
+body.light-mode .secondary-btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #334155 !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08) !important;
+}
+
+body.light-mode .secondary-btn:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(168, 85, 247, 0.05)) !important;
+  border-color: #0ea5e9 !important;
+  color: #0ea5e9 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.25) !important;
+}
+
+/* Ensure icons inside the button scale properly */
+.secondary-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.secondary-btn:hover svg {
+  transform: scale(1.1);
+}
 
 .empty-state {
   text-align: center; padding: 40px;
@@ -1837,12 +1881,18 @@ table tbody tr:hover td, .data-table tbody tr:hover td {
   color: #ffffff !important;
 }
 
-/* Light Mode Hover Override */
+/* Light Mode Hover Override - Background & Border */
 body.light-mode table tbody tr:hover,
 body.light-mode .data-table tbody tr:hover {
   background-color: rgba(14, 165, 233, 0.12) !important; /* Soft blue for light mode */
   box-shadow: inset 4px 0 0 #0ea5e9 !important;
-  color: #0f172a !important;
+}
+
+/* FIX: Explicitly target the TD to override the white text from Dark Mode */
+body.light-mode table tbody tr:hover td,
+body.light-mode .data-table tbody tr:hover td {
+  color: #0f172a !important; /* Dark text for high contrast */
+  font-weight: 600; /* Optional: Make it pop a bit more */
 }
 
 /* ── Table Header Neon System ──────────────────────────────────── */
@@ -2073,4 +2123,125 @@ body.light-mode .search-wrapper button {
 
 body.light-mode .search-wrapper button:hover:not(:disabled) {
   box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+}
+
+/* ── Fix invisible options in Dark Mode ───────────────────────── */
+select option,
+.cyber-input option {
+  background-color: #0f172a !important; /* Dark slate background matching the auth/modal theme */
+  color: #f8fafc !important; /* Bright white text */
+}
+
+/* Light mode override just in case */
+body.light-mode select option,
+body.light-mode .cyber-input option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* ── Light Mode - Header Buttons Pop Effect ───────────────────── */
+
+/* REFRESH Button */
+body.light-mode .header .header-btn.btn-primary {
+  background: var(--grad-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25) !important;
+  font-weight: 700 !important;
+  transition: all 0.3s ease !important;
+}
+
+body.light-mode .header .header-btn.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4) !important;
+}
+
+body.light-mode .header .header-btn.btn-primary:active {
+  transform: translateY(0) !important;
+}
+
+/* LOGOUT Button */
+body.light-mode .header .header-btn.btn-delete {
+  background: linear-gradient(135deg, #f43f5e 0%, #ef4444 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+  font-weight: 700 !important;
+  transition: all 0.3s ease !important;
+}
+
+body.light-mode .header .header-btn.btn-delete:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4) !important;
+}
+
+body.light-mode .header .header-btn.btn-delete:active {
+  transform: translateY(0) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EXPORT BUTTONS — Brand Colors + Sweep Shine Animation
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Continuous Shine Animation */
+@keyframes sweep-shine {
+  0% { transform: translateX(-150%) skewX(-25deg); }
+  15% { transform: translateX(200%) skewX(-25deg); }
+  100% { transform: translateX(200%) skewX(-25deg); } /* Pause interval */
+}
+
+/* Base Export Button Style */
+.btn-export {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* The sweeping light beam */
+.btn-export::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  transform: translateX(-150%) skewX(-25deg);
+  animation: sweep-shine 4s infinite; /* Beam passes every 4 seconds */
+}
+
+.btn-export:hover {
+  transform: translateY(-2px);
+}
+
+.btn-export:active {
+  transform: translateY(0);
+}
+
+/* Excel Button - Vibrant Green */
+.btn-excel {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+.btn-excel:hover {
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5) !important;
+}
+
+/* PDF Button - Vibrant Red */
+.btn-pdf {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+.btn-pdf:hover {
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5) !important;
 }
