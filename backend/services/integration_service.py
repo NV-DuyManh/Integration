@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime, timezone
 from core.database.transaction import cross_db_transaction
 from services.transaction_service import TransactionService
@@ -246,17 +247,24 @@ class IntegrationService:
         from core.database.sqlserver import get_sqlserver_connection
         conn = get_sqlserver_connection()
         cur = conn.cursor()
+        # Generate fake unique data to bypass UNIQUE constraints on Email/Phone
+        fake_id = uuid.uuid4().hex[:8]
+        fake_email = f"orphan_{fake_id}@demo.local"
+        fake_phone = f"000{fake_id}"
+
         try:
             cur.execute("""
                 INSERT INTO dbo.Employees 
-                (FullName, DateOfBirth, HireDate, Status, CreatedAt, UpdatedAt)
+                (FullName, DateOfBirth, HireDate, Status, Email, PhoneNumber, CreatedAt, UpdatedAt)
                 OUTPUT INSERTED.EmployeeID
-                VALUES (?, ?, ?, ?, GETDATE(), GETDATE())
+                VALUES (?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
             """, (
                 employee_data['FullName'],
                 employee_data['DateOfBirth'],
                 employee_data['HireDate'],
-                employee_data.get('Status', 'Active')
+                employee_data.get('Status', 'Active'),
+                fake_email,
+                fake_phone
             ))
             emp_id = cur.fetchone()[0]
             conn.commit()

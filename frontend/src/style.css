@@ -1845,12 +1845,29 @@ body.light-mode .data-table tbody tr:hover {
   color: #0f172a !important;
 }
 
-.data-table th {
+/* ── Table Header Neon System ──────────────────────────────────── */
+
+/* Dark Mode - Neon Header */
+table th, .data-table th {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: var(--bg-card-solid);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  color: var(--neon-cyan) !important; /* Bright neon text */
+  background: rgba(0, 242, 255, 0.05) !important; /* Subtle cyan tint */
+  border-bottom: 2px solid rgba(0, 242, 255, 0.25) !important; /* Distinct glowing border */
+  font-weight: 800 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 0 8px rgba(0, 242, 255, 0.2); /* Slight text glow */
+}
+
+/* Light Mode - Accent Header Override */
+body.light-mode table th,
+body.light-mode .data-table th {
+  color: #0ea5e9 !important; /* Strong blue for light mode */
+  background: rgba(14, 165, 233, 0.05) !important;
+  border-bottom: 2px solid rgba(14, 165, 233, 0.3) !important;
+  text-shadow: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════
