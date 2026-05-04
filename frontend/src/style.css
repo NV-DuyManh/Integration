@@ -872,9 +872,14 @@ body::before {
 }
 
 .status-badge.offline {
-  background: var(--danger-bg);
-  color: var(--danger);
-  border: 1px solid rgba(248,113,113,0.2);
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.05);
+  border: 1px solid rgba(251, 113, 133, 0.2);
+}
+
+.status-badge.offline .dot {
+  background: #fb7185;
+  box-shadow: 0 0 8px #fb7185;
 }
 
 .status-badge.checking {
