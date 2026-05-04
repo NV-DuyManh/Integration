@@ -162,6 +162,8 @@ class DashboardService:
                         d.DepartmentName AS Department,
                         COUNT(DISTINCT e.EmployeeID) AS `Employee Count`,
                         COALESCE(SUM(s.BaseSalary), 0) AS `Total Base Salary`,
+                        COALESCE(SUM(s.Bonus), 0) AS `Total Bonus`,
+                        COALESCE(SUM(s.Deductions), 0) AS `Total Deductions`,
                         COALESCE(SUM(s.NetSalary), 0) AS `Total Net Salary`
                     FROM departments_payroll d
                     LEFT JOIN employees_payroll e ON d.DepartmentID = e.DepartmentID
@@ -177,8 +179,10 @@ class DashboardService:
                 report_data.append({
                     "Department": r["Department"],
                     "Employee Count": r["Employee Count"],
-                    "Total Base Salary": f"${r['Total Base Salary']:,.0f}",
-                    "Total Net Salary": f"${r['Total Net Salary']:,.0f}",
+                    "Total Base Salary": float(r["Total Base Salary"]),
+                    "Total Bonus": float(r["Total Bonus"]),
+                    "Total Deductions": float(r["Total Deductions"]),
+                    "Total Net Salary": float(r["Total Net Salary"]),
                 })
             return {"title": "Department Payroll Report", "data": report_data}
             

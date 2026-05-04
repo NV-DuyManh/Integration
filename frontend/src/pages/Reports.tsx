@@ -83,12 +83,10 @@ export default function Reports() {
             <input className="cyber-input" placeholder="Search report data..." value={search} onChange={e => setSearch(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', width: 300, fontSize: 13 }} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, fontSize: 13 }}
-                onClick={() => exportToExcel(displayData, `${reportData?.title || 'Report'}.xlsx`)}>
+              <button className="btn-export btn-excel" onClick={() => exportToExcel(displayData, `${reportData?.title || 'Report'}.xlsx`)}>
                 <FiDownload size={14} /> Export Excel
               </button>
-              <button className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999, fontSize: 13 }}
-                onClick={() => exportToPDF(displayData, reportData?.title || 'Report', `${reportData?.title || 'Report'}.pdf`)}>
+              <button className="btn-export btn-pdf" onClick={() => exportToPDF(displayData, reportData?.title || 'Report', `${reportData?.title || 'Report'}.pdf`)}>
                 <FiDownload size={14} /> Export PDF
               </button>
             </div>
@@ -122,6 +120,40 @@ export default function Reports() {
                   </tr>
                 ))}
               </tbody>
+              {displayData.length > 0 && (() => {
+                const numericCols = headers.filter(h =>
+                  displayData.some((row: any) => typeof row[h] === 'number')
+                );
+                if (numericCols.length === 0) return null;
+                return (
+                  <tfoot style={{ borderTop: '2px solid var(--accent-cyan)', background: 'rgba(0,242,254,0.04)' }}>
+                    <tr>
+                      {headers.map((h, idx) => {
+                        const isCurrency = /salary|bonus|deduction/i.test(h);
+                        const isNumCol = numericCols.includes(h);
+                        if (idx === 0) {
+                          return (
+                            <td key={h} style={{ padding: '14px 16px', fontWeight: 800, fontSize: 13, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Grand Total
+                            </td>
+                          );
+                        }
+                        if (isNumCol) {
+                          const total = displayData.reduce((sum: number, row: any) => sum + (Number(row[h]) || 0), 0);
+                          return (
+                            <td key={h} style={{ textAlign: 'right', padding: '14px 16px', fontWeight: 700, fontSize: 13 }}>
+                              {isCurrency
+                                ? <span style={{ color: 'var(--accent-green)' }}>₫{total.toLocaleString()}</span>
+                                : <span style={{ color: 'var(--text-primary)' }}>{total.toLocaleString()}</span>}
+                            </td>
+                          );
+                        }
+                        return <td key={h} style={{ padding: '14px 16px' }} />;
+                      })}
+                    </tr>
+                  </tfoot>
+                );
+              })()}
             </table>
           </div>
         </div>
