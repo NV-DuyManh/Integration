@@ -198,5 +198,7 @@ export const api = {
   // Account Management
   getUsers: () => fetchApi<any[]>('/api/auth/users'),
   updateUserRole: (id: number, role: string) => putApi<any>(`/api/auth/users/${id}/role`, { role }),
+  deleteUser: (id: number) => deleteApi<{message: string}>(`/api/auth/users/${id}?token=${localStorage.getItem('auth_token') || ''}`),
+  adminResetPassword: (id: number, pass: string) => postApi<{message: string}>(`/api/auth/users/${id}/reset-password?token=${localStorage.getItem('auth_token') || ''}`, { new_password: pass }),
 };
 

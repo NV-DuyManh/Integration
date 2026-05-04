@@ -267,6 +267,7 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                     onClick={(e) => {
                       e.preventDefault();
                       setSuccess('Password reset instructions have been sent to your email (Simulated).');
+                      setError(null);
                     }}
                   >
                     Forgot password?

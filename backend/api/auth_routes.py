@@ -3,7 +3,7 @@
 #  Authentication endpoints — backed by local SQLite auth store
 #  No changes to HUMAN_2025 or PAYROLL_2026 schemas
 # ─────────────────────────────────────────────────────────────────
-from fastapi import APIRouter, HTTPException, Header, Body
+from fastapi import APIRouter, HTTPException, Header, Body, Depends, Query
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 import re
@@ -21,6 +21,8 @@ from core.auth_store import (
     cleanup_expired_sessions,
     get_all_users,
     update_user_role,
+    delete_user_by_id,
+    force_reset_password,
 )
 
 router = APIRouter()
@@ -29,6 +31,17 @@ logger = logging.getLogger(__name__)
 # ── Initialize SQLite auth DB on module load ─────────────────────
 init_db()
 logger.info("✅ Auth store initialized (SQLite)")
+
+
+def require_admin(token: str = Query("")):
+    if not token:
+        raise HTTPException(status_code=401, detail="No token provided")
+    user = validate_session(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    if user["role"].lower() != "admin":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    return user
 
 
 # ── Request / Response Models ────────────────────────────────────
@@ -221,3 +234,19 @@ async def change_user_role(user_id: int, payload: dict = Body(...)):
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "Role updated successfully", "new_role": new_role}
 
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: int, current_user: dict = Depends(require_admin)):
+    if delete_user_by_id(user_id):
+        return {"message": "User deleted"}
+    raise HTTPException(status_code=404, detail="User not found")
+
+
+@router.post("/users/{user_id}/reset-password")
+async def admin_reset_password(user_id: int, payload: dict = Body(...), current_user: dict = Depends(require_admin)):
+    new_pass = payload.get("new_password")
+    if not new_pass:
+        raise HTTPException(status_code=400, detail="New password is required")
+    if force_reset_password(user_id, new_pass):
+        return {"message": "Password updated"}
+    raise HTTPException(status_code=400, detail="Failed to reset password")

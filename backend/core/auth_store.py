@@ -221,3 +221,19 @@ def update_user_role(user_id: int, new_role: str) -> bool:
         cursor = conn.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
         return cursor.rowcount > 0
 
+
+def delete_user_by_id(user_id: int) -> bool:
+    with _get_conn() as conn:
+        cursor = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        return cursor.rowcount > 0
+
+
+def force_reset_password(user_id: int, new_password: str) -> bool:
+    hashed = _hash_password(new_password)
+    with _get_conn() as conn:
+        cursor = conn.execute(
+            "UPDATE users SET password = ?, updated_at = ? WHERE id = ?",
+            (hashed, datetime.now(timezone.utc).isoformat(), user_id),
+        )
+        return cursor.rowcount > 0
+
