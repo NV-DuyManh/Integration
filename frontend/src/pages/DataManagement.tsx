@@ -131,7 +131,7 @@ export default function DataManagement() {
                 <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-cyan)', opacity: 0.6 }} size={14} />
                 <input className="cyber-input" placeholder="Search employees..." value={empSearch} onChange={e => setEmpSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
-              <button className="secondary-btn" onClick={() => exportToExcel(dispEmp, 'Employees_Export.xlsx')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999 }}><FiDownload size={14} /> Export</button>
+              <button className="btn-export btn-excel" onClick={() => exportToExcel(dispEmp, 'Employees_Export.xlsx')}><FiDownload size={14} /> Export</button>
               <button onClick={() => { setOrphanForm({ FullName: '', DateOfBirth: '', HireDate: new Date().toISOString().split('T')[0], Status: 'Active' }); setOrphanModal(true); }} style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999,
                 border: '1px solid rgba(255,107,107,0.4)', background: 'rgba(255,107,107,0.08)',
@@ -179,7 +179,7 @@ export default function DataManagement() {
                 <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-cyan)', opacity: 0.6 }} size={14} />
                 <input className="cyber-input" placeholder="Search ID or Month..." value={salSearch} onChange={e => setSalSearch(e.target.value)} style={{ padding: '8px 12px 8px 34px', borderRadius: 999, width: 200, fontSize: 13 }} />
               </div>
-              <button className="secondary-btn" onClick={() => exportToExcel(dispSal, 'Salaries_Export.xlsx')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13, borderRadius: 999 }}><FiDownload size={14} /> Export</button>
+              <button className="btn-export btn-excel" onClick={() => exportToExcel(dispSal, 'Salaries_Export.xlsx')}><FiDownload size={14} /> Export</button>
               <button className="btn-primary" onClick={openAddSal} style={{ padding: '8px 18px', fontSize: 13, borderRadius: 999 }}><FiPlus style={{ marginRight: 6 }} /> Add Salary</button>
             </div>
           </div>
