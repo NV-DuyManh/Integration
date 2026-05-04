@@ -193,13 +193,14 @@ export default function Sidebar() {
               <span
                 className="user-role"
                 style={{
-                  color: 'var(--accent-cyan)',
+                  color: user.role?.toLowerCase() === 'admin' ? 'var(--accent-cyan)' : 
+                         user.role?.toLowerCase() === 'editor' ? 'var(--accent-yellow)' : 'var(--text-muted)',
                   fontSize: 10,
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                 }}
               >
-                {displayRole}
+                {user.role?.toUpperCase() || 'VIEWER'}
               </span>
             </div>
           </div>
