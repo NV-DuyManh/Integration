@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload, FiAlertTriangle } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload, FiAlertTriangle, FiCalendar, FiBriefcase, FiAward, FiTrendingUp } from 'react-icons/fi';
 import { api } from '../api';
 import { exportToExcel } from '../utils/exportUtils';
 
 export default function DataManagement() {
-  const [tab, setTab] = useState<'employees'|'salaries'>('employees');
+  const [tab, setTab] = useState<'employees'|'salaries'|'attendance'|'departments'|'positions'|'dividends'>('employees');
   const [employees, setEmployees] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<any[]>([]);
+  const [dividends, setDividends] = useState<any[]>([]);
   const [empSearch, setEmpSearch] = useState('');
   const [salSearch, setSalSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,16 +26,27 @@ export default function DataManagement() {
 
   const loadData = async () => {
     setLoading(true);
-    const [e, s, d, p] = await Promise.all([
+    const [e, s, d, p, att, div] = await Promise.all([
       api.getEmployeesWithNames(),
       api.getPayrollTableData('salaries'),
       api.getDepartments(),
       api.getPositions(),
+      api.getPayrollTableData('attendance'),
+      api.getHrTableData('Dividends'),
     ]);
     if (e.data) setEmployees((e.data as any).data || []);
     if (s.data) setSalaries((s.data as any).data || []);
-    if (d.data) setDepartments(Array.isArray(d.data) ? d.data : []);
-    if (p.data) setPositions(Array.isArray(p.data) ? p.data : []);
+    if (d.data) setDepartments(Array.isArray(d.data) ? [...d.data].sort((a, b) => a.DepartmentID - b.DepartmentID) : []);
+    if (p.data) setPositions(Array.isArray(p.data) ? [...p.data].sort((a, b) => a.PositionID - b.PositionID) : []);
+    if (att.data) {
+      const attList = (att.data as any).data || [];
+      setAttendance([...attList].sort((a, b) => {
+        if (a.AttendanceMonth > b.AttendanceMonth) return -1;
+        if (a.AttendanceMonth < b.AttendanceMonth) return 1;
+        return a.EmployeeID - b.EmployeeID;
+      }));
+    }
+    if (div.data) setDividends((div.data as any).data || []);
     setLoading(false);
   };
   useEffect(() => { loadData(); }, []);
@@ -110,15 +123,22 @@ export default function DataManagement() {
           </div>
         </div>
         <div className="card-body" style={{ padding: '0 24px 24px' }}>
-          <div style={{ display: 'flex', gap: 16, marginTop: 24, marginBottom: 8 }}>
-            {[{ id: 'employees' as const, label: 'Employees', icon: <FiUsers /> }, { id: 'salaries' as const, label: 'Salaries', icon: <FiDollarSign /> }].map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '14px 28px', borderRadius: 999,
-                border: `1px solid ${tab === t.id ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.08)'}`,
-                background: tab === t.id ? 'rgba(0,242,254,0.1)' : 'rgba(15,23,42,0.6)',
-                color: tab === t.id ? 'var(--accent-cyan)' : 'var(--text-primary)',
-                fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: tab === t.id ? '0 0 15px rgba(0,242,254,0.15)' : 'none',
-              }}>{t.icon} {t.label}</button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 20, marginBottom: 8 }}>
+            {[
+              { id: 'employees' as const, label: 'Employees', icon: <FiUsers size={16} /> }, 
+              { id: 'salaries' as const, label: 'Salaries', icon: <FiDollarSign size={16} /> },
+              { id: 'attendance' as const, label: 'Attendance', icon: <FiCalendar size={16} /> },
+              { id: 'departments' as const, label: 'Departments', icon: <FiBriefcase size={16} /> },
+              { id: 'positions' as const, label: 'Positions', icon: <FiAward size={16} /> },
+              { id: 'dividends' as const, label: 'Dividends', icon: <FiTrendingUp size={16} /> }
+            ].map(t => (
+              <div key={t.id} onClick={() => setTab(t.id)}
+                className={`report-card-selector${tab === t.id ? ' active' : ''}`}
+                style={{ padding: '12px 24px', minHeight: 'auto', display: 'flex', alignItems: 'center', gap: 10, width: 'auto' }}
+              >
+                <div style={{ color: tab === t.id ? 'var(--accent-cyan)' : 'var(--text-muted)', display: 'flex' }}>{t.icon}</div>
+                <h4 style={{ color: tab === t.id ? 'var(--accent-cyan)' : 'var(--text-primary)', fontSize: 14, fontWeight: 700, margin: 0 }}>{t.label}</h4>
+              </div>
             ))}
           </div>
         </div>
@@ -223,6 +243,102 @@ export default function DataManagement() {
                       </td>
                     </tr>
                   ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Tab */}
+      {tab === 'attendance' && (
+        <div className="card glass mt-6 fade-in" style={{ marginTop: 24, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div className="card-header" style={{ background: 'linear-gradient(90deg, rgba(74,222,128,0.05), rgba(0,242,254,0.05))', borderBottom: '1px solid rgba(74,222,128,0.1)', padding: '20px 24px' }}>
+            <h3 style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}><FiCalendar style={{ color: 'var(--accent-green)' }} /> Attendance Records</h3>
+          </div>
+          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+            <table className="data-table" style={{ width: '100%' }}>
+              <thead className="table-header"><tr><th style={{ padding: 16 }}>ID</th><th style={{ padding: 16 }}>Employee</th><th style={{ padding: 16 }}>Month</th><th style={{ padding: 16 }}>Work Days</th><th style={{ padding: 16 }}>Absent</th><th style={{ padding: 16 }}>Leave</th></tr></thead>
+              <tbody>
+                {attendance.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No attendance data found.</td></tr> : attendance.map(a => (
+                  <tr key={a.AttendanceID} className="table-row">
+                    <td className="table-cell mono" style={{ padding: 16, color: 'var(--accent-cyan)' }}>{a.AttendanceID}</td>
+                    <td className="table-cell" style={{ padding: 16, fontWeight: 600 }}>
+                      {a.FullName ? a.FullName : `Employee #${a.EmployeeID}`}
+                    </td>
+                    <td className="table-cell" style={{ padding: 16 }}>{a.AttendanceMonth}</td>
+                    <td className="table-cell" style={{ padding: 16, color: 'var(--accent-green)' }}>{a.WorkDays}</td>
+                    <td className="table-cell" style={{ padding: 16, color: 'var(--accent-red)' }}>{a.AbsentDays}</td>
+                    <td className="table-cell" style={{ padding: 16, color: 'var(--accent-yellow)' }}>{a.LeaveDays}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Departments Tab */}
+      {tab === 'departments' && (
+        <div className="card glass mt-6 fade-in" style={{ marginTop: 24, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div className="card-header" style={{ background: 'linear-gradient(90deg, rgba(0,242,254,0.05), rgba(123,47,247,0.05))', borderBottom: '1px solid rgba(0,242,254,0.1)', padding: '20px 24px' }}>
+            <h3 style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}><FiBriefcase style={{ color: 'var(--accent-cyan)' }} /> Departments (HR Sync)</h3>
+          </div>
+          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+            <table className="data-table" style={{ width: '100%' }}>
+              <thead className="table-header"><tr><th style={{ padding: 16 }}>Dept ID</th><th style={{ padding: 16 }}>Department Name</th></tr></thead>
+              <tbody>
+                {departments.length === 0 ? <tr><td colSpan={2} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No departments found.</td></tr> : departments.map(d => (
+                  <tr key={d.DepartmentID} className="table-row">
+                    <td className="table-cell mono" style={{ padding: 16, color: 'var(--accent-cyan)' }}>{d.DepartmentID}</td>
+                    <td className="table-cell" style={{ padding: 16, fontWeight: 600 }}>{d.DepartmentName}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Positions Tab */}
+      {tab === 'positions' && (
+        <div className="card glass mt-6 fade-in" style={{ marginTop: 24, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div className="card-header" style={{ background: 'linear-gradient(90deg, rgba(0,242,254,0.05), rgba(123,47,247,0.05))', borderBottom: '1px solid rgba(0,242,254,0.1)', padding: '20px 24px' }}>
+            <h3 style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}><FiAward style={{ color: 'var(--accent-cyan)' }} /> Job Positions (HR Sync)</h3>
+          </div>
+          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+            <table className="data-table" style={{ width: '100%' }}>
+              <thead className="table-header"><tr><th style={{ padding: 16 }}>Pos ID</th><th style={{ padding: 16 }}>Position Title</th></tr></thead>
+              <tbody>
+                {positions.length === 0 ? <tr><td colSpan={2} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No positions found.</td></tr> : positions.map(p => (
+                  <tr key={p.PositionID} className="table-row">
+                    <td className="table-cell mono" style={{ padding: 16, color: 'var(--accent-cyan)' }}>{p.PositionID}</td>
+                    <td className="table-cell" style={{ padding: 16, fontWeight: 600 }}>{p.PositionName}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Dividends Tab */}
+      {tab === 'dividends' && (
+        <div className="card glass mt-6 fade-in" style={{ marginTop: 24, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div className="card-header" style={{ background: 'linear-gradient(90deg, rgba(123,47,247,0.05), rgba(250,204,21,0.05))', borderBottom: '1px solid rgba(123,47,247,0.1)', padding: '20px 24px' }}>
+            <h3 style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}><FiTrendingUp style={{ color: 'var(--accent-purple)' }} /> Dividend Distributions</h3>
+          </div>
+          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+            <table className="data-table" style={{ width: '100%' }}>
+              <thead className="table-header"><tr><th style={{ padding: 16 }}>ID</th><th style={{ padding: 16 }}>Employee</th><th style={{ padding: 16 }}>Date</th><th style={{ padding: 16 }}>Amount</th></tr></thead>
+              <tbody>
+                {dividends.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No dividend data found.</td></tr> : dividends.map(d => (
+                  <tr key={d.DividendID} className="table-row">
+                    <td className="table-cell mono" style={{ padding: 16, color: 'var(--accent-purple)' }}>{d.DividendID}</td>
+                    <td className="table-cell" style={{ padding: 16, fontWeight: 600 }}>{d.FullName || d.EmployeeID}</td>
+                    <td className="table-cell" style={{ padding: 16 }}>{d.DividendDate}</td>
+                    <td className="table-cell" style={{ padding: 16, color: 'var(--accent-yellow)', fontWeight: 600 }}>${d.DividendAmount?.toLocaleString()}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

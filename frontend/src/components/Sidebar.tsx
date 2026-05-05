@@ -190,18 +190,17 @@ export default function Sidebar() {
               <span className="user-name" style={{ color: 'var(--text-primary)' }}>
                 {user.username}
               </span>
-              <span
-                className="user-role"
-                style={{
-                  color: user.role?.toLowerCase() === 'admin' ? 'var(--accent-cyan)' : 
-                         user.role?.toLowerCase() === 'editor' ? 'var(--accent-yellow)' : 'var(--text-muted)',
-                  fontSize: 10,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
+              <div style={{ 
+                fontSize: 11, 
+                fontWeight: 700, 
+                letterSpacing: '1px', 
+                textTransform: 'uppercase',
+                marginTop: 4,
+                color: user.role?.toLowerCase() === 'admin' ? 'var(--accent-green)' : 
+                       user.role?.toLowerCase() === 'editor' ? '#facc15' : '#fb7185'
+              }}>
                 {user.role?.toUpperCase() || 'VIEWER'}
-              </span>
+              </div>
             </div>
           </div>
         )}

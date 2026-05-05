@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiDownload } from 'react-icons/fi';
 import { api } from '../api';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
@@ -24,6 +24,10 @@ export default function Reports() {
     setLoading(false);
     if (res.data) setReportData(res.data);
   };
+
+  useEffect(() => {
+    handleGenerate('compensation');
+  }, []);
 
   const handleSort = (col: string) => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -120,35 +124,41 @@ export default function Reports() {
                   </tr>
                 ))}
               </tbody>
-              {displayData.length > 0 && (() => {
+              {displayData.length > 0 && selectedType !== 'exceptions' && (() => {
+                // Filter out columns that are non-numeric or contain 'id' in their name
                 const numericCols = headers.filter(h =>
-                  displayData.some((row: any) => typeof row[h] === 'number')
+                  !h.toLowerCase().includes('id') && displayData.some((row: any) => typeof row[h] === 'number')
                 );
+                
                 if (numericCols.length === 0) return null;
+                
                 return (
-                  <tfoot style={{ borderTop: '2px solid var(--accent-cyan)', background: 'rgba(0,242,254,0.04)' }}>
+                  <tfoot style={{ borderTop: '3px solid #f59e0b', background: 'rgba(245, 158, 11, 0.12)' }}>
                     <tr>
                       {headers.map((h, idx) => {
                         const isCurrency = /salary|bonus|deduction/i.test(h);
                         const isNumCol = numericCols.includes(h);
+                        
                         if (idx === 0) {
                           return (
-                            <td key={h} style={{ padding: '14px 16px', fontWeight: 800, fontSize: 13, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <td key={h} style={{ padding: '18px 16px', fontWeight: 800, fontSize: 14, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                               Grand Total
                             </td>
                           );
                         }
+                        
                         if (isNumCol) {
                           const total = displayData.reduce((sum: number, row: any) => sum + (Number(row[h]) || 0), 0);
                           return (
-                            <td key={h} style={{ textAlign: 'right', padding: '14px 16px', fontWeight: 700, fontSize: 13 }}>
-                              {isCurrency
-                                ? <span style={{ color: 'var(--accent-green)' }}>₫{total.toLocaleString()}</span>
-                                : <span style={{ color: 'var(--text-primary)' }}>{total.toLocaleString()}</span>}
+                            <td key={h} style={{ textAlign: 'right', padding: '18px 16px', fontWeight: 800, fontSize: 15 }}>
+                              {/* Using var(--text-primary) ensures it is White in Dark Mode and Black in Light Mode */}
+                              <span style={{ color: 'var(--text-primary)' }}>
+                                {isCurrency ? `₫${total.toLocaleString()}` : total.toLocaleString()}
+                              </span>
                             </td>
                           );
                         }
-                        return <td key={h} style={{ padding: '14px 16px' }} />;
+                        return <td key={h} style={{ padding: '18px 16px' }} />;
                       })}
                     </tr>
                   </tfoot>
