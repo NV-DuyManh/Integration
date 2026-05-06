@@ -5,15 +5,16 @@ import type { SystemStatus, SchemaResponse, AuditLog } from '../api';
 
 /* ── Helper: humanise action names ──────────────────────────────── */
 const ACTION_META: Record<string, { icon: string; color: string; gradient: string }> = {
-  CREATE:  { icon: '＋', color: 'var(--accent-green)',  gradient: 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.05))' },
-  INSERT:  { icon: '＋', color: 'var(--accent-green)',  gradient: 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.05))' },
-  UPDATE:  { icon: '✎', color: 'var(--accent-cyan)',   gradient: 'linear-gradient(135deg, rgba(0,242,254,0.2), rgba(0,242,254,0.05))' },
-  DELETE:  { icon: '✕', color: 'var(--accent-red)',    gradient: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05))' },
-  READ:    { icon: '⊙', color: 'var(--accent-purple)', gradient: 'linear-gradient(135deg, rgba(123,47,247,0.2), rgba(123,47,247,0.05))' },
-  QUERY:   { icon: '⊙', color: 'var(--accent-purple)', gradient: 'linear-gradient(135deg, rgba(123,47,247,0.2), rgba(123,47,247,0.05))' },
-  LOGIN:   { icon: '⇢', color: 'var(--accent-yellow)', gradient: 'linear-gradient(135deg, rgba(250,204,21,0.2), rgba(250,204,21,0.05))' },
-  LOGOUT:  { icon: '⇠', color: 'var(--accent-yellow)', gradient: 'linear-gradient(135deg, rgba(250,204,21,0.2), rgba(250,204,21,0.05))' },
-  DEFAULT: { icon: '•', color: 'var(--text-muted)',     gradient: 'linear-gradient(135deg, rgba(100,116,139,0.2), rgba(100,116,139,0.05))' },
+  CREATE:       { icon: '＋', color: 'var(--accent-green)',  gradient: 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.05))' },
+  INSERT:       { icon: '＋', color: 'var(--accent-green)',  gradient: 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.05))' },
+  UPDATE:       { icon: '✎', color: 'var(--accent-cyan)',   gradient: 'linear-gradient(135deg, rgba(0,242,254,0.2), rgba(0,242,254,0.05))' },
+  DELETE:       { icon: '✕', color: 'var(--accent-red)',    gradient: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05))' },
+  READ:         { icon: '⊙', color: 'var(--accent-purple)', gradient: 'linear-gradient(135deg, rgba(123,47,247,0.2), rgba(123,47,247,0.05))' },
+  QUERY:        { icon: '⊙', color: 'var(--accent-purple)', gradient: 'linear-gradient(135deg, rgba(123,47,247,0.2), rgba(123,47,247,0.05))' },
+  AUTO_SCAN:    { icon: '⟳', color: 'var(--accent-purple)', gradient: 'linear-gradient(135deg, rgba(123,47,247,0.2), rgba(123,47,247,0.05))' },
+  RAW_SQL:      { icon: '⌘', color: 'var(--accent-yellow)', gradient: 'linear-gradient(135deg, rgba(250,204,21,0.2), rgba(250,204,21,0.05))' },
+  TEST_ANOMALY: { icon: '⚠', color: 'var(--accent-red)',    gradient: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05))' },
+  DEFAULT:      { icon: '•', color: 'var(--text-muted)',     gradient: 'linear-gradient(135deg, rgba(100,116,139,0.2), rgba(100,116,139,0.05))' },
 };
 
 function getMeta(action: string) {
@@ -42,6 +43,7 @@ export default function Dashboard() {
   const [payrollSchema, setPayrollSchema] = useState<SchemaResponse | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
+  const [logTab, setLogTab] = useState<'user' | 'system'>('user');
 
   /* ── Fetch data on mount ────────────────────────────────────────── */
   useEffect(() => {
@@ -154,6 +156,15 @@ export default function Dashboard() {
     );
   };
 
+  /* ── Filtered logs: hide LOGIN/LOGOUT, split by tab ────────────── */
+  const USER_ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'INSERT', 'RAW_SQL', 'TEST_ANOMALY'];
+  const filteredLogs = auditLogs.filter(log => {
+    const act = log.action.toUpperCase();
+    if (act === 'LOGIN' || act === 'LOGOUT') return false;
+    const isUserAction = USER_ACTIONS.includes(act);
+    return logTab === 'user' ? isUserAction : !isUserAction;
+  });
+
   /* ── JSX ────────────────────────────────────────────────────────── */
   return (
     <>
@@ -247,20 +258,37 @@ export default function Dashboard() {
         <div className="card-header" style={{
           background: 'linear-gradient(90deg, rgba(0,242,254,0.06), rgba(123,47,247,0.06))',
           borderBottom: '1px solid rgba(0,242,254,0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FiActivity style={{ color: 'var(--accent-cyan)', fontSize: 18, filter: 'drop-shadow(0 0 6px rgba(0,242,254,0.4))' }} />
-            <h3 style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 14 }}>Recent Activity Timeline</h3>
-            <span style={{
-              fontSize: 11, fontWeight: 700, padding: '2px 10px',
-              borderRadius: 999, background: 'rgba(0,242,254,0.1)',
-              color: 'var(--accent-cyan)', border: '1px solid rgba(0,242,254,0.2)',
-              letterSpacing: '0.5px',
-            }}>
-              LIVE
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <FiActivity style={{ color: 'var(--accent-cyan)', fontSize: 18, filter: 'drop-shadow(0 0 6px rgba(0,242,254,0.4))' }} />
+              <h3 style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, margin: 0 }}>Audit Trail</h3>
+            </div>
+            
+            {/* Custom Tabs inside Header */}
+            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+              <button 
+                onClick={() => setLogTab('user')}
+                style={{ 
+                  padding: '4px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                  background: logTab === 'user' ? 'rgba(0,242,254,0.15)' : 'transparent',
+                  color: logTab === 'user' ? 'var(--accent-cyan)' : 'var(--text-muted)'
+                }}>
+                User Actions
+              </button>
+              <button 
+                onClick={() => setLogTab('system')}
+                style={{ 
+                  padding: '4px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                  background: logTab === 'system' ? 'rgba(123,47,247,0.15)' : 'transparent',
+                  color: logTab === 'system' ? 'var(--accent-purple)' : 'var(--text-muted)'
+                }}>
+                System Logs
+              </button>
+            </div>
           </div>
+          
           <button
             onClick={refreshLogs}
             className="header-btn"
@@ -271,21 +299,22 @@ export default function Dashboard() {
             Refresh
           </button>
         </div>
+        
         <div className="card-body" style={{ padding: 0 }}>
-          {logsLoading && auditLogs.length === 0 ? (
+          {logsLoading && filteredLogs.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
               <FiClock style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }} />
               <p style={{ fontSize: 13 }}>Loading audit logs…</p>
             </div>
-          ) : auditLogs.length === 0 ? (
+          ) : filteredLogs.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
               <FiClock style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }} />
-              <p style={{ fontSize: 13, fontWeight: 500 }}>No activity recorded yet</p>
-              <p style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>Transactions will appear here as you use the system.</p>
+              <p style={{ fontSize: 13, fontWeight: 500 }}>No activity found</p>
+              <p style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>No records match the current filter.</p>
             </div>
           ) : (
             <div className="activity-timeline" style={{ maxHeight: 420, overflowY: 'auto' }}>
-              {auditLogs.map((log, idx) => {
+              {filteredLogs.map((log, idx) => {
                 const meta = getMeta(log.action);
                 return (
                   <div
@@ -294,7 +323,7 @@ export default function Dashboard() {
                     style={{
                       display: 'flex', alignItems: 'flex-start', gap: 14,
                       padding: '14px 24px',
-                      borderBottom: idx < auditLogs.length - 1 ? '1px solid var(--border-light)' : 'none',
+                      borderBottom: idx < filteredLogs.length - 1 ? '1px solid var(--border-light)' : 'none',
                       transition: 'background 0.2s ease',
                       cursor: 'default',
                       animationDelay: `${idx * 40}ms`,
@@ -314,7 +343,7 @@ export default function Dashboard() {
                       }}>
                         {meta.icon}
                       </div>
-                      {idx < auditLogs.length - 1 && (
+                      {idx < filteredLogs.length - 1 && (
                         <div style={{
                           width: 2, flex: 1, minHeight: 8,
                           background: 'linear-gradient(180deg, var(--border) 0%, transparent 100%)',
@@ -326,24 +355,17 @@ export default function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                         <span style={{
-                          fontSize: 12, fontWeight: 700,
+                          fontSize: 12, fontWeight: 800,
                           textTransform: 'uppercase', letterSpacing: '0.8px',
                           color: meta.color,
-                          padding: '1px 8px', borderRadius: 6,
-                          background: meta.gradient,
                         }}>
                           {log.action}
                         </span>
-                        {log.table_name && (
-                          <span className="mono" style={{
-                            fontSize: 11, color: 'var(--accent-cyan)',
-                            background: 'rgba(0,242,254,0.06)',
-                            padding: '1px 8px', borderRadius: 6,
-                            border: '1px solid rgba(0,242,254,0.1)',
-                          }}>
-                            {log.table_name}
-                          </span>
-                        )}
+                        
+                        <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                          by <span style={{ color: 'var(--accent-cyan)' }}>{log.user}</span>
+                        </span>
+
                         <span style={{
                           fontSize: 10, color: 'var(--text-muted)', fontWeight: 500,
                           marginLeft: 'auto', whiteSpace: 'nowrap',
@@ -356,29 +378,30 @@ export default function Dashboard() {
 
                       {log.details && (
                         <p style={{
-                          fontSize: 12, color: 'var(--text-secondary)',
-                          lineHeight: 1.5, margin: 0,
-                          overflow: 'hidden', textOverflow: 'ellipsis',
-                          display: '-webkit-box', WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
+                          fontSize: 13, color: 'var(--text-secondary)',
+                          lineHeight: 1.5, margin: '4px 0 0 0',
                         }}>
                           {log.details}
                         </p>
                       )}
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                        {log.table_name && (
+                          <span className="mono" style={{
+                            fontSize: 10, color: 'var(--accent-cyan)',
+                            background: 'rgba(0,242,254,0.06)',
+                            padding: '2px 8px', borderRadius: 4,
+                            border: '1px solid rgba(0,242,254,0.1)',
+                          }}>
+                            Target: {log.table_name}
+                          </span>
+                        )}
                         <span style={{
                           fontSize: 10, color: 'var(--text-muted)',
                           display: 'flex', alignItems: 'center', gap: 4,
                         }}>
                           <FiDatabase style={{ fontSize: 10 }} />
                           {log.target_db}
-                        </span>
-                        <span style={{
-                          fontSize: 10, color: 'var(--text-muted)',
-                          display: 'flex', alignItems: 'center', gap: 4,
-                        }}>
-                          👤 {log.user}
                         </span>
                       </div>
                     </div>

@@ -153,6 +153,11 @@ export interface AuditLog {
 
 // ── API Client ──────────────────────────────────────────────────
 
+const getActor = () => {
+  try { return encodeURIComponent(JSON.parse(localStorage.getItem('auth_user') || '{}').username || 'system'); }
+  catch { return 'system'; }
+};
+
 export const api = {
   // Health & Dashboard
   health: () => fetchApi<HealthResponse>('/health'),
@@ -177,13 +182,13 @@ export const api = {
   executeRawSql: (database: string, query: string) => postApi<any>(`/api/dashboard/execute-sql?token=${localStorage.getItem('auth_token') || ''}`, { database, query }),
 
   // Management endpoints
-  addEmployee: (data: any) => postApi<any>('/api/hr/employees', data),
-  updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}`, data),
-  deleteEmployee: (id: number) => deleteApi<any>(`/api/hr/employees/${id}`),
-  addOrphanEmployee: (data: any) => postApi<any>('/api/hr/employees/orphan', data),
-  addSalary: (data: any) => postApi<any>('/api/payroll/salaries', data),
-  updateSalary: (id: number, data: any) => putApi<any>(`/api/payroll/salaries/${id}`, data),
-  deleteSalary: (id: number) => deleteApi<any>(`/api/payroll/salaries/${id}`),
+  addEmployee: (data: any) => postApi<any>(`/api/hr/employees?current_user=${getActor()}`, data),
+  updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}?current_user=${getActor()}`, data),
+  deleteEmployee: (id: number) => deleteApi<any>(`/api/hr/employees/${id}?current_user=${getActor()}`),
+  addOrphanEmployee: (data: any) => postApi<any>(`/api/hr/employees/orphan?current_user=${getActor()}`, data),
+  addSalary: (data: any) => postApi<any>(`/api/payroll/salaries?current_user=${getActor()}`, data),
+  updateSalary: (id: number, data: any) => putApi<any>(`/api/payroll/salaries/${id}?current_user=${getActor()}`, data),
+  deleteSalary: (id: number) => deleteApi<any>(`/api/payroll/salaries/${id}?current_user=${getActor()}`),
 
   // Raw Data Fetch
   getHrTableData: (table: string, limit = 100) => fetchApi<any>(`/api/hr/tables/${table}?limit=${limit}`),

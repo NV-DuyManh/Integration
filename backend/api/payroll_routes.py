@@ -33,25 +33,25 @@ async def get_payroll_table_data(
 
 
 @router.post("/salaries")
-async def add_salary(salary_data: dict = Body(...)):
+async def add_salary(salary_data: dict = Body(...), current_user: str = Query("system")):
     """Add a new salary record."""
     try:
-        return integration_service.add_salary(salary_data)
+        return integration_service.add_salary(salary_data, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/salaries/{salary_id}")
-async def update_salary(salary_id: int, salary_data: dict = Body(...)):
+async def update_salary(salary_id: int, salary_data: dict = Body(...), current_user: str = Query("system")):
     """Update an existing salary record."""
     try:
-        return integration_service.update_salary(salary_id, salary_data)
+        return integration_service.update_salary(salary_id, salary_data, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/salaries/{salary_id}")
-async def delete_salary(salary_id: int):
+async def delete_salary(salary_id: int, current_user: str = Query("system")):
     """Delete a salary record."""
     try:
-        return integration_service.delete_salary(salary_id)
+        return integration_service.delete_salary(salary_id, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -34,26 +34,26 @@ async def get_hr_table_data(
 
 
 @router.post("/employees")
-async def add_employee(employee_data: dict = Body(...)):
+async def add_employee(employee_data: dict = Body(...), current_user: str = Query("system")):
     """Add a new employee and sync to payroll."""
     try:
-        return integration_service.add_employee(employee_data)
+        return integration_service.add_employee(employee_data, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/employees/{emp_id}")
-async def update_employee(emp_id: int, employee_data: dict = Body(...)):
+async def update_employee(emp_id: int, employee_data: dict = Body(...), current_user: str = Query("system")):
     """Update an existing employee and sync to payroll."""
     try:
-        return integration_service.update_employee(emp_id, employee_data)
+        return integration_service.update_employee(emp_id, employee_data, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/employees/{emp_id}")
-async def delete_employee(emp_id: int):
+async def delete_employee(emp_id: int, current_user: str = Query("system")):
     """Delete an employee if they have no salary or dividend records."""
     try:
-        return integration_service.delete_employee(emp_id)
+        return integration_service.delete_employee(emp_id, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -86,13 +86,13 @@ async def get_positions():
 
 
 @router.post("/employees/orphan")
-async def add_orphan_employee(employee_data: dict = Body(...)):
+async def add_orphan_employee(employee_data: dict = Body(...), current_user: str = Query("system")):
     """[TEST ONLY] Create an orphan employee in HR DB only (no payroll sync).
     
     This intentionally bypasses the sync flow to create a reconciliation
     anomaly that can be detected by the dashboard's reconciliation checks.
     """
     try:
-        return integration_service.add_orphan_employee(employee_data)
+        return integration_service.add_orphan_employee(employee_data, current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

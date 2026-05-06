@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class IntegrationService:
     """Service to handle atomic operations across HR and Payroll databases."""
 
-    def add_employee(self, employee_data: dict) -> dict:
+    def add_employee(self, employee_data: dict, current_user: str = "system") -> dict:
         """
         Add an employee to HUMAN_2025 and sync to PAYROLL_2026.
         """
@@ -53,12 +53,13 @@ class IntegrationService:
                 action="CREATE",
                 target_db="BOTH",
                 table="Employees",
-                details=f"Created EmployeeID {emp_id}"
+                details=f"Created EmployeeID {emp_id}",
+                user=current_user
             )
             
             return {**employee_data, "EmployeeID": emp_id}
 
-    def update_employee(self, emp_id: int, employee_data: dict) -> dict:
+    def update_employee(self, emp_id: int, employee_data: dict, current_user: str = "system") -> dict:
         """
         Update an employee in HUMAN_2025 and sync to PAYROLL_2026.
         """
@@ -105,12 +106,13 @@ class IntegrationService:
                 action="UPDATE",
                 target_db="BOTH",
                 table="Employees",
-                details=f"Updated EmployeeID {emp_id}"
+                details=f"Updated EmployeeID {emp_id}",
+                user=current_user
             )
             
             return {**employee_data, "EmployeeID": emp_id}
 
-    def delete_employee(self, emp_id: int):
+    def delete_employee(self, emp_id: int, current_user: str = "system"):
         """
         Delete an employee and all dependent records across both databases.
         Cascading order:
@@ -144,11 +146,12 @@ class IntegrationService:
                 target_db="BOTH",
                 table="Employees",
                 details=details,
+                user=current_user,
             )
 
             return {"message": f"Employee {emp_id} and all related records deleted successfully"}
 
-    def add_salary(self, salary_data: dict) -> dict:
+    def add_salary(self, salary_data: dict, current_user: str = "system") -> dict:
         """
         Add a salary record in PAYROLL_2026.
         Ensures the employee exists in HUMAN_2025.
@@ -182,12 +185,13 @@ class IntegrationService:
                 action="CREATE",
                 target_db="PAYROLL_2026",
                 table="salaries",
-                details=f"Created SalaryID {salary_id} for EmployeeID {emp_id}"
+                details=f"Created SalaryID {salary_id} for EmployeeID {emp_id}",
+                user=current_user
             )
             
             return {**salary_data, "SalaryID": salary_id}
 
-    def update_salary(self, salary_id: int, salary_data: dict) -> dict:
+    def update_salary(self, salary_id: int, salary_data: dict, current_user: str = "system") -> dict:
         """
         Update a salary record in PAYROLL_2026.
         """
@@ -214,12 +218,13 @@ class IntegrationService:
                 action="UPDATE",
                 target_db="PAYROLL_2026",
                 table="salaries",
-                details=f"Updated SalaryID {salary_id}"
+                details=f"Updated SalaryID {salary_id}",
+                user=current_user
             )
             
             return {**salary_data, "SalaryID": salary_id}
 
-    def delete_salary(self, salary_id: int):
+    def delete_salary(self, salary_id: int, current_user: str = "system"):
         """
         Delete a salary record from PAYROLL_2026.
         """
@@ -233,12 +238,13 @@ class IntegrationService:
                 action="DELETE",
                 target_db="PAYROLL_2026",
                 table="salaries",
-                details=f"Deleted SalaryID {salary_id}"
+                details=f"Deleted SalaryID {salary_id}",
+                user=current_user
             )
             
             return {"message": "Salary deleted successfully"}
 
-    def add_orphan_employee(self, employee_data: dict) -> dict:
+    def add_orphan_employee(self, employee_data: dict, current_user: str = "system") -> dict:
         """Intentionally create an orphan record in HR only for testing.
         
         This bypasses the normal sync flow to create a record that exists
@@ -278,7 +284,8 @@ class IntegrationService:
                 action="TEST_ANOMALY",
                 target_db="HUMAN_2025",
                 table="Employees",
-                details=f"Created ORPHAN EmployeeID {emp_id} (intentionally not synced to PAYROLL_2026)"
+                details=f"Created ORPHAN EmployeeID {emp_id} (intentionally not synced to PAYROLL_2026)",
+                user=current_user
             )
             return {**employee_data, "EmployeeID": emp_id}
         except Exception as e:

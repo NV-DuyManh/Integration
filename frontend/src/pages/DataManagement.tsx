@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload, FiAlertTriangle, FiCalendar, FiBriefcase, FiAward, FiTrendingUp } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiSearch, FiPlus, FiEdit, FiTrash2, FiX, FiSave, FiDownload, FiAlertTriangle, FiCalendar, FiBriefcase, FiAward } from 'react-icons/fi';
 import { api } from '../api';
 import { exportToExcel } from '../utils/exportUtils';
 
 export default function DataManagement() {
-  const [tab, setTab] = useState<'employees'|'salaries'|'attendance'|'departments'|'positions'|'dividends'>('employees');
+  const [tab, setTab] = useState<'employees'|'salaries'|'attendance'|'departments'|'positions'>('employees');
   const [employees, setEmployees] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
-  const [dividends, setDividends] = useState<any[]>([]);
+
   const [empSearch, setEmpSearch] = useState('');
   const [salSearch, setSalSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,13 +26,12 @@ export default function DataManagement() {
 
   const loadData = async () => {
     setLoading(true);
-    const [e, s, d, p, att, div] = await Promise.all([
+    const [e, s, d, p, att] = await Promise.all([
       api.getEmployeesWithNames(),
       api.getPayrollTableData('salaries'),
       api.getDepartments(),
       api.getPositions(),
       api.getPayrollTableData('attendance'),
-      api.getHrTableData('Dividends'),
     ]);
     if (e.data) setEmployees((e.data as any).data || []);
     if (s.data) setSalaries((s.data as any).data || []);
@@ -46,7 +45,7 @@ export default function DataManagement() {
         return a.EmployeeID - b.EmployeeID;
       }));
     }
-    if (div.data) setDividends((div.data as any).data || []);
+
     setLoading(false);
   };
   useEffect(() => { loadData(); }, []);
@@ -130,7 +129,7 @@ export default function DataManagement() {
               { id: 'attendance' as const, label: 'Attendance', icon: <FiCalendar size={16} /> },
               { id: 'departments' as const, label: 'Departments', icon: <FiBriefcase size={16} /> },
               { id: 'positions' as const, label: 'Positions', icon: <FiAward size={16} /> },
-              { id: 'dividends' as const, label: 'Dividends', icon: <FiTrendingUp size={16} /> }
+
             ].map(t => (
               <div key={t.id} onClick={() => setTab(t.id)}
                 className={`report-card-selector${tab === t.id ? ' active' : ''}`}
@@ -321,29 +320,7 @@ export default function DataManagement() {
         </div>
       )}
 
-      {/* Dividends Tab */}
-      {tab === 'dividends' && (
-        <div className="card glass mt-6 fade-in" style={{ marginTop: 24, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-          <div className="card-header" style={{ background: 'linear-gradient(90deg, rgba(123,47,247,0.05), rgba(250,204,21,0.05))', borderBottom: '1px solid rgba(123,47,247,0.1)', padding: '20px 24px' }}>
-            <h3 style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}><FiTrendingUp style={{ color: 'var(--accent-purple)' }} /> Dividend Distributions</h3>
-          </div>
-          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
-            <table className="data-table" style={{ width: '100%' }}>
-              <thead className="table-header"><tr><th style={{ padding: 16 }}>ID</th><th style={{ padding: 16 }}>Employee</th><th style={{ padding: 16 }}>Date</th><th style={{ padding: 16 }}>Amount</th></tr></thead>
-              <tbody>
-                {dividends.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No dividend data found.</td></tr> : dividends.map(d => (
-                  <tr key={d.DividendID} className="table-row">
-                    <td className="table-cell mono" style={{ padding: 16, color: 'var(--accent-purple)' }}>{d.DividendID}</td>
-                    <td className="table-cell" style={{ padding: 16, fontWeight: 600 }}>{d.FullName || d.EmployeeID}</td>
-                    <td className="table-cell" style={{ padding: 16 }}>{d.DividendDate}</td>
-                    <td className="table-cell" style={{ padding: 16, color: 'var(--accent-yellow)', fontWeight: 600 }}>${d.DividendAmount?.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+
 
       {/* Employee Modal */}
       {empModal && (
