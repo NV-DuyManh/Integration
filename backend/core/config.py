@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # ── SQL Server — HUMAN_2025 (Windows Authentication) ────────────
-    SQLSERVER_HOST: str = r"DUY-MANH\SQLEXPRESS"
+    SQLSERVER_HOST: str = r"(localdb)\ProjectModels"
     SQLSERVER_DATABASE: str = "HUMAN_2025"
     SQLSERVER_DRIVER: str = "{ODBC Driver 17 for SQL Server}"
     SQLSERVER_TRUSTED_CONNECTION: str = "yes"
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     MYSQL_PORT: int = 3306
     MYSQL_DATABASE: str = "PAYROLL_2026"
     MYSQL_USER: str = "root"
-    MYSQL_PASSWORD: str = ""
+    MYSQL_PASSWORD: str = ".TranThinh270400"
 
     @property
     def sqlserver_connection_string(self) -> str:

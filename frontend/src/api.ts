@@ -32,7 +32,6 @@ async function postApi<T>(endpoint: string, body: unknown): Promise<ApiResponse<
       body: JSON.stringify(body),
     });
     if (!resp.ok) {
-      // Try to extract detail from JSON error response
       try {
         const errJson = await resp.json();
         const detail = errJson.detail || JSON.stringify(errJson);
@@ -153,11 +152,6 @@ export interface AuditLog {
 
 // ── API Client ──────────────────────────────────────────────────
 
-const getActor = () => {
-  try { return encodeURIComponent(JSON.parse(localStorage.getItem('auth_user') || '{}').username || 'system'); }
-  catch { return 'system'; }
-};
-
 export const api = {
   // Health & Dashboard
   health: () => fetchApi<HealthResponse>('/health'),
@@ -181,21 +175,49 @@ export const api = {
   // Developer Tools
   executeRawSql: (database: string, query: string) => postApi<any>(`/api/dashboard/execute-sql?token=${localStorage.getItem('auth_token') || ''}`, { database, query }),
 
-  // Management endpoints
-  addEmployee: (data: any) => postApi<any>(`/api/hr/employees?current_user=${getActor()}`, data),
-  updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}?current_user=${getActor()}`, data),
-  deleteEmployee: (id: number) => deleteApi<any>(`/api/hr/employees/${id}?current_user=${getActor()}`),
-  addOrphanEmployee: (data: any) => postApi<any>(`/api/hr/employees/orphan?current_user=${getActor()}`, data),
-  addSalary: (data: any) => postApi<any>(`/api/payroll/salaries?current_user=${getActor()}`, data),
-  updateSalary: (id: number, data: any) => putApi<any>(`/api/payroll/salaries/${id}?current_user=${getActor()}`, data),
-  deleteSalary: (id: number) => deleteApi<any>(`/api/payroll/salaries/${id}?current_user=${getActor()}`),
+  // Employee Management
+  addEmployee: (data: any) => postApi<any>('/api/hr/employees', data),
+  updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}`, data),
+  deleteEmployee: (id: number) => deleteApi<any>(`/api/hr/employees/${id}`),
+  addOrphanEmployee: (data: any) => postApi<any>('/api/hr/employees/orphan', data),
 
-  // Raw Data Fetch
+  // Salary Management
+  addSalary: (data: any) => postApi<any>('/api/payroll/salaries', data),
+  updateSalary: (id: number, data: any) => putApi<any>(`/api/payroll/salaries/${id}`, data),
+  deleteSalary: (id: number) => deleteApi<any>(`/api/payroll/salaries/${id}`),
+
+  // Attendance Management
+  addAttendance: (data: any) => postApi<any>('/api/payroll/attendance', data),
+  updateAttendance: (id: number, data: any) => putApi<any>(`/api/payroll/attendance/${id}`, data),
+  deleteAttendance: (id: number) => deleteApi<any>(`/api/payroll/attendance/${id}`),
+
+  // Dividend Management
+  addDividend: (data: any) => postApi<any>('/api/hr/dividends', data),
+  updateDividend: (id: number, data: any) => putApi<any>(`/api/hr/dividends/${id}`, data),
+  deleteDividend: (id: number) => deleteApi<any>(`/api/hr/dividends/${id}`),
+
+
+  // Raw Data Fetch (original table endpoints)
   getHrTableData: (table: string, limit = 100) => fetchApi<any>(`/api/hr/tables/${table}?limit=${limit}`),
   getPayrollTableData: (table: string, limit = 100) => fetchApi<any>(`/api/payroll/tables/${table}?limit=${limit}`),
   getEmployeesWithNames: () => fetchApi<any>('/api/hr/employees'),
   getDepartments: () => fetchApi<any>('/api/hr/departments'),
   getPositions: () => fetchApi<any>('/api/hr/positions'),
+
+  // Department CRUD
+  addDepartment: (data: any) => postApi<any>('/api/hr/departments', data),
+  updateDepartment: (id: number, data: any) => putApi<any>(`/api/hr/departments/${id}`, data),
+  deleteDepartment: (id: number) => deleteApi<any>(`/api/hr/departments/${id}`),
+
+  // Position CRUD
+  addPosition: (data: any) => postApi<any>('/api/hr/positions', data),
+  updatePosition: (id: number, data: any) => putApi<any>(`/api/hr/positions/${id}`, data),
+  deletePosition: (id: number) => deleteApi<any>(`/api/hr/positions/${id}`),
+
+  // ── NEW: Enriched endpoints with FullName joins ──────────────
+  getSalariesWithNames: (limit = 500) => fetchApi<any>(`/api/payroll/salaries-with-names?limit=${limit}`),
+  getAttendanceWithNames: (limit = 500) => fetchApi<any>(`/api/payroll/attendance-with-names?limit=${limit}`),
+  getDividendsWithNames: (limit = 500) => fetchApi<any>(`/api/hr/dividends-with-names?limit=${limit}`),
 
   // Auth
   register: (data: RegisterRequest) => postApi<AuthResponse>('/api/auth/register', data),
@@ -209,4 +231,3 @@ export const api = {
   deleteUser: (id: number) => deleteApi<{message: string}>(`/api/auth/users/${id}?token=${localStorage.getItem('auth_token') || ''}`),
   adminResetPassword: (id: number, pass: string) => postApi<{message: string}>(`/api/auth/users/${id}/reset-password?token=${localStorage.getItem('auth_token') || ''}`, { new_password: pass }),
 };
-
