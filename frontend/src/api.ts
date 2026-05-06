@@ -173,6 +173,9 @@ export const api = {
   // Audit Logs
   getAuditLogs: (limit = 50) => fetchApi<AuditLog[]>(`/api/dashboard/audit-logs?limit=${limit}`),
 
+  // Developer Tools
+  executeRawSql: (database: string, query: string) => postApi<any>(`/api/dashboard/execute-sql?token=${localStorage.getItem('auth_token') || ''}`, { database, query }),
+
   // Management endpoints
   addEmployee: (data: any) => postApi<any>('/api/hr/employees', data),
   updateEmployee: (id: number, data: any) => putApi<any>(`/api/hr/employees/${id}`, data),

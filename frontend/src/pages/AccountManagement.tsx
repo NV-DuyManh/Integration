@@ -41,11 +41,11 @@ const AccountManagement = () => {
   return (
     <div className="fade-in" style={{ padding: '4px 16px' }}>
       <div style={{ marginBottom: 16 }}>
-        <h1 className="glow-text" style={{ fontSize: 26, marginBottom: 2, color: '#fff' }}>Access Control</h1>
+        <h1 className="glow-text2" style={{ fontSize: 26, marginBottom: 2, color: 'var(--text-primary)' }}>Access Control</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 13, opacity: 0.8 }}>Manage system-wide authentication and privilege levels.</p>
       </div>
 
-      <div className="card glass" style={{ borderRadius: 20, padding: '4px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+      <div className="card glass" style={{ borderRadius: 20, padding: '4px', border: '1px solid var(--border)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 2px' }}>
           <thead>
             <tr style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -70,7 +70,7 @@ const AccountManagement = () => {
                       <FiUser size={18} color="var(--accent-cyan)" />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{u.username}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>{u.username}</div>
                       {currentUser.username === u.username && <span style={{ fontSize: 9, color: 'var(--accent-green)', fontWeight: 800 }}>YOU</span>}
                     </div>
                   </div>
@@ -136,8 +136,8 @@ const AccountManagement = () => {
       </div>
 
       {modal.type && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card glass fade-in" style={{ padding: 40, width: '100%', maxWidth: 440, borderRadius: 32, border: '1px solid rgba(255,255,255,0.12)', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card glass fade-in" style={{ padding: 40, width: '100%', maxWidth: 440, borderRadius: 32, border: '1px solid var(--border)', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
             <div style={{
               width: 72, height: 72, borderRadius: 24,
               background: modal.type === 'delete' ? 'rgba(239,68,68,0.1)' : 'rgba(0,242,254,0.1)',
@@ -147,11 +147,11 @@ const AccountManagement = () => {
               {modal.type === 'delete' ? <FiAlertTriangle /> : modal.type === 'reset' ? <FiKey /> : <FiShield />}
             </div>
 
-            <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: '#fff' }}>
+            <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)' }}>
               {modal.type === 'delete' ? 'Terminate Account' : modal.type === 'reset' ? 'Security Reset' : 'Role Update'}
             </h3>
 
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, marginBottom: 32, lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 32, lineHeight: 1.6 }}>
               {modal.type === 'delete'
                 ? `This action is irreversible. All data for user "${modal.user.username}" will be wiped.`
                 : modal.type === 'reset'
@@ -168,7 +168,7 @@ const AccountManagement = () => {
                   placeholder="NEW PASSCODE"
                   value={newPass}
                   onChange={e => setNewPass(e.target.value)}
-                  style={{ textAlign: 'center', fontSize: 20, letterSpacing: 6, borderRadius: 16, height: 56 }}
+                  style={{ textAlign: 'center', fontSize: 20, letterSpacing: 6, borderRadius: 16, height: 56, color: 'var(--text-primary)' }}
                 />
               </div>
             )}
@@ -176,7 +176,7 @@ const AccountManagement = () => {
             <div style={{ display: 'flex', gap: 16 }}>
               <button
                 onClick={() => { setModal({ type: null, user: null }); setNewPass(''); }}
-                style={{ flex: 1, padding: '16px', borderRadius: 16, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+                style={{ flex: 1, padding: '16px', borderRadius: 16, background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
               >
                 ABORT
               </button>

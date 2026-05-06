@@ -1883,7 +1883,7 @@ table tbody tr:hover, .data-table tbody tr:hover {
 
 /* Make sure text pops a bit more on hover */
 table tbody tr:hover td, .data-table tbody tr:hover td {
-  color: #ffffff !important;
+  color: var(--text-primary) !important;
 }
 
 /* Light Mode Hover Override - Background & Border */
@@ -1896,8 +1896,7 @@ body.light-mode .data-table tbody tr:hover {
 /* FIX: Explicitly target the TD to override the white text from Dark Mode */
 body.light-mode table tbody tr:hover td,
 body.light-mode .data-table tbody tr:hover td {
-  color: #0f172a !important; /* Dark text for high contrast */
-  font-weight: 600; /* Optional: Make it pop a bit more */
+  color: var(--text-primary) !important; /* Dark text for high contrast */
 }
 
 /* ── Table Header Neon System ──────────────────────────────────── */
