@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class IntegrationService:
     """Service to handle atomic operations across HR and Payroll databases."""
 
-    def add_employee(self, employee_data: dict, current_user: str = "system") -> dict:
+    def add_employee(self, employee_data: dict) -> dict:
         """
         Add an employee to HUMAN_2025 and sync to PAYROLL_2026.
         """
@@ -53,13 +53,12 @@ class IntegrationService:
                 action="CREATE",
                 target_db="BOTH",
                 table="Employees",
-                details=f"Created EmployeeID {emp_id}",
-                user=current_user
+                details=f"Created EmployeeID {emp_id}"
             )
             
             return {**employee_data, "EmployeeID": emp_id}
 
-    def update_employee(self, emp_id: int, employee_data: dict, current_user: str = "system") -> dict:
+    def update_employee(self, emp_id: int, employee_data: dict) -> dict:
         """
         Update an employee in HUMAN_2025 and sync to PAYROLL_2026.
         """
@@ -106,13 +105,12 @@ class IntegrationService:
                 action="UPDATE",
                 target_db="BOTH",
                 table="Employees",
-                details=f"Updated EmployeeID {emp_id}",
-                user=current_user
+                details=f"Updated EmployeeID {emp_id}"
             )
             
             return {**employee_data, "EmployeeID": emp_id}
 
-    def delete_employee(self, emp_id: int, current_user: str = "system"):
+    def delete_employee(self, emp_id: int):
         """
         Delete an employee and all dependent records across both databases.
         Cascading order:
@@ -146,12 +144,11 @@ class IntegrationService:
                 target_db="BOTH",
                 table="Employees",
                 details=details,
-                user=current_user,
             )
 
             return {"message": f"Employee {emp_id} and all related records deleted successfully"}
 
-    def add_salary(self, salary_data: dict, current_user: str = "system") -> dict:
+    def add_salary(self, salary_data: dict) -> dict:
         """
         Add a salary record in PAYROLL_2026.
         Ensures the employee exists in HUMAN_2025.
@@ -185,13 +182,12 @@ class IntegrationService:
                 action="CREATE",
                 target_db="PAYROLL_2026",
                 table="salaries",
-                details=f"Created SalaryID {salary_id} for EmployeeID {emp_id}",
-                user=current_user
+                details=f"Created SalaryID {salary_id} for EmployeeID {emp_id}"
             )
             
             return {**salary_data, "SalaryID": salary_id}
 
-    def update_salary(self, salary_id: int, salary_data: dict, current_user: str = "system") -> dict:
+    def update_salary(self, salary_id: int, salary_data: dict) -> dict:
         """
         Update a salary record in PAYROLL_2026.
         """
@@ -218,13 +214,12 @@ class IntegrationService:
                 action="UPDATE",
                 target_db="PAYROLL_2026",
                 table="salaries",
-                details=f"Updated SalaryID {salary_id}",
-                user=current_user
+                details=f"Updated SalaryID {salary_id}"
             )
             
             return {**salary_data, "SalaryID": salary_id}
 
-    def delete_salary(self, salary_id: int, current_user: str = "system"):
+    def delete_salary(self, salary_id: int):
         """
         Delete a salary record from PAYROLL_2026.
         """
@@ -238,31 +233,21 @@ class IntegrationService:
                 action="DELETE",
                 target_db="PAYROLL_2026",
                 table="salaries",
-                details=f"Deleted SalaryID {salary_id}",
-                user=current_user
+                details=f"Deleted SalaryID {salary_id}"
             )
             
             return {"message": "Salary deleted successfully"}
 
-    def add_orphan_employee(self, employee_data: dict, current_user: str = "system") -> dict:
-        """Intentionally create an orphan record in HR only for testing.
-        
-        This bypasses the normal sync flow to create a record that exists
-        in SQL Server (HUMAN_2025) but NOT in MySQL (PAYROLL_2026),
-        triggering reconciliation alerts on the dashboard.
-        """
+    def add_orphan_employee(self, employee_data: dict) -> dict:
+        """Intentionally create an orphan record in HR only for testing."""
         from core.database.sqlserver import get_sqlserver_connection
         conn = get_sqlserver_connection()
         cur = conn.cursor()
-        # Generate fake unique data to bypass UNIQUE constraints
         fake_id = uuid.uuid4().hex[:8]
         fake_email = f"orphan_{fake_id}@demo.local"
         fake_phone = f"000{fake_id}"
-
-        # Randomize Vietnamese status to match UI consistency
         valid_statuses = ["Đang làm việc", "Thử việc", "Thực tập", "Nghỉ phép"]
         random_status = random.choice(valid_statuses)
-
         try:
             cur.execute("""
                 INSERT INTO dbo.Employees 
@@ -279,17 +264,134 @@ class IntegrationService:
             ))
             emp_id = cur.fetchone()[0]
             conn.commit()
-
             TransactionService.log_transaction(
                 action="TEST_ANOMALY",
                 target_db="HUMAN_2025",
                 table="Employees",
-                details=f"Created ORPHAN EmployeeID {emp_id} (intentionally not synced to PAYROLL_2026)",
-                user=current_user
+                details=f"Created ORPHAN EmployeeID {emp_id} (intentionally not synced to PAYROLL_2026)"
             )
             return {**employee_data, "EmployeeID": emp_id}
-        except Exception as e:
+        except Exception:
             conn.rollback()
             raise
         finally:
             cur.close()
+
+    # ── Attendance CRUD ──────────────────────────────────────────
+    def add_attendance(self, data: dict) -> dict:
+        from core.database.mysql import get_mysql_connection
+        conn = get_mysql_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                INSERT INTO attendance (EmployeeID, AttendanceMonth, WorkDays, AbsentDays, LeaveDays)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                data['EmployeeID'], data['AttendanceMonth'],
+                data.get('WorkDays', 22), data.get('AbsentDays', 0), data.get('LeaveDays', 0)
+            ))
+            new_id = cur.lastrowid
+            conn.commit()
+            TransactionService.log_transaction(action="CREATE", target_db="PAYROLL_2026", table="attendance", details=f"Created AttendanceID {new_id}")
+            return {**data, "AttendanceID": new_id}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
+
+    def update_attendance(self, att_id: int, data: dict) -> dict:
+        from core.database.mysql import get_mysql_connection
+        conn = get_mysql_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                UPDATE attendance SET EmployeeID=%s, AttendanceMonth=%s, WorkDays=%s, AbsentDays=%s, LeaveDays=%s
+                WHERE AttendanceID=%s
+            """, (data['EmployeeID'], data['AttendanceMonth'], data.get('WorkDays', 22), data.get('AbsentDays', 0), data.get('LeaveDays', 0), att_id))
+            if cur.rowcount == 0:
+                raise ValueError(f"Attendance {att_id} not found")
+            conn.commit()
+            TransactionService.log_transaction(action="UPDATE", target_db="PAYROLL_2026", table="attendance", details=f"Updated AttendanceID {att_id}")
+            return {**data, "AttendanceID": att_id}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
+
+    def delete_attendance(self, att_id: int) -> dict:
+        from core.database.mysql import get_mysql_connection
+        conn = get_mysql_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("DELETE FROM attendance WHERE AttendanceID = %s", (att_id,))
+            if cur.rowcount == 0:
+                raise ValueError(f"Attendance {att_id} not found")
+            conn.commit()
+            TransactionService.log_transaction(action="DELETE", target_db="PAYROLL_2026", table="attendance", details=f"Deleted AttendanceID {att_id}")
+            return {"message": "Attendance deleted"}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
+
+    # ── Dividend CRUD ─────────────────────────────────────────────
+    def add_dividend(self, data: dict) -> dict:
+        from core.database.sqlserver import get_sqlserver_connection
+        conn = get_sqlserver_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                INSERT INTO dbo.Dividends (EmployeeID, DividendAmount, DividendDate, CreatedAt)
+                OUTPUT INSERTED.DividendID
+                VALUES (?, ?, ?, GETDATE())
+            """, (data['EmployeeID'], data['DividendAmount'], data['DividendDate']))
+            new_id = cur.fetchone()[0]
+            conn.commit()
+            TransactionService.log_transaction(action="CREATE", target_db="HUMAN_2025", table="Dividends", details=f"Created DividendID {new_id}")
+            return {**data, "DividendID": new_id}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
+
+    def update_dividend(self, div_id: int, data: dict) -> dict:
+        from core.database.sqlserver import get_sqlserver_connection
+        conn = get_sqlserver_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                UPDATE dbo.Dividends SET EmployeeID=?, DividendAmount=?, DividendDate=?
+                WHERE DividendID=?
+            """, (data['EmployeeID'], data['DividendAmount'], data['DividendDate'], div_id))
+            if cur.rowcount == 0:
+                raise ValueError(f"Dividend {div_id} not found")
+            conn.commit()
+            TransactionService.log_transaction(action="UPDATE", target_db="HUMAN_2025", table="Dividends", details=f"Updated DividendID {div_id}")
+            return {**data, "DividendID": div_id}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
+
+    def delete_dividend(self, div_id: int) -> dict:
+        from core.database.sqlserver import get_sqlserver_connection
+        conn = get_sqlserver_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("DELETE FROM dbo.Dividends WHERE DividendID = ?", (div_id,))
+            if cur.rowcount == 0:
+                raise ValueError(f"Dividend {div_id} not found")
+            conn.commit()
+            TransactionService.log_transaction(action="DELETE", target_db="HUMAN_2025", table="Dividends", details=f"Deleted DividendID {div_id}")
+            return {"message": "Dividend deleted"}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
+

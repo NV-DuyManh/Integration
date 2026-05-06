@@ -4,6 +4,7 @@
 # ─────────────────────────────────────────────────────────────────
 import logging
 from repositories.payroll_repository import PayrollRepository
+from core.database.mysql import mysql_cursor
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,71 @@ class PayrollService:
             "data": rows,
         }
 
-    # ── Phase 2: Real business methods go here ───────────────────
-    # Examples (after schema discovery):
-    #   def get_payroll_summary(self, period: str) -> dict
-    #   def get_employee_salary(self, emp_id: int) -> dict
-    #   def get_payroll_by_department(self) -> list
+    def get_salaries_with_names(self, limit: int = 500) -> dict:
+        """Get salaries joined with FullName from employees_payroll."""
+        query = """
+            SELECT
+                s.SalaryID,
+                s.EmployeeID,
+                e.FullName,
+                s.SalaryMonth,
+                s.BaseSalary,
+                s.Bonus,
+                s.Deductions,
+                s.NetSalary,
+                s.CreatedAt
+            FROM salaries s
+            LEFT JOIN employees_payroll e ON s.EmployeeID = e.EmployeeID
+            ORDER BY s.SalaryMonth DESC, s.EmployeeID ASC
+            LIMIT %s
+        """
+        rows = []
+        with mysql_cursor() as cur:
+            cur.execute(query, (limit,))
+            raw = cur.fetchall()
+            for r in raw:
+                row = dict(r)
+                for k, v in row.items():
+                    if hasattr(v, "isoformat"):
+                        row[k] = v.isoformat()
+                rows.append(row)
+        return {
+            "table": "salaries",
+            "total_rows": len(rows),
+            "preview_rows": len(rows),
+            "data": rows,
+        }
+
+    def get_attendance_with_names(self, limit: int = 500) -> dict:
+        """Get attendance joined with FullName from employees_payroll."""
+        query = """
+            SELECT
+                a.AttendanceID,
+                a.EmployeeID,
+                e.FullName,
+                a.AttendanceMonth,
+                a.WorkDays,
+                a.AbsentDays,
+                a.LeaveDays,
+                a.CreatedAt
+            FROM attendance a
+            LEFT JOIN employees_payroll e ON a.EmployeeID = e.EmployeeID
+            ORDER BY a.AttendanceMonth DESC, a.EmployeeID ASC
+            LIMIT %s
+        """
+        rows = []
+        with mysql_cursor() as cur:
+            cur.execute(query, (limit,))
+            raw = cur.fetchall()
+            for r in raw:
+                row = dict(r)
+                for k, v in row.items():
+                    if hasattr(v, "isoformat"):
+                        row[k] = v.isoformat()
+                rows.append(row)
+        return {
+            "table": "attendance",
+            "total_rows": len(rows),
+            "preview_rows": len(rows),
+            "data": rows,
+        }
