@@ -7,7 +7,6 @@ venv/
 *.egg-info/
 dist/
 build/
-auth.db
 
 # ── Node ──────────────────────────────────────────────────────────
 node_modules/

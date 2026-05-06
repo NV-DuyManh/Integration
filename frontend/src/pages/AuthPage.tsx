@@ -193,8 +193,11 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
       {/* ── RIGHT AUTH PANEL ───────────────────────────────────── */}
       <div className="auth-panel">
         <div
-          className="auth-card glass"
+          className="auth-card"
           style={{
+            background: '#0f172a',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '24px',
             padding: 40,
             boxShadow: '0 0 25px rgba(0, 242, 254, 0.08), 0 10px 40px rgba(0, 0, 0, 0.4)',
           }}
@@ -266,8 +269,6 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
                     style={{ color: 'var(--accent-cyan)', transition: 'all 0.2s' }}
                     onClick={(e) => {
                       e.preventDefault();
-                      setSuccess('Password reset instructions have been sent to your email (Simulated).');
-                      setError(null);
                     }}
                   >
                     Forgot password?
